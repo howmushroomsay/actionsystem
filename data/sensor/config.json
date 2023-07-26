@@ -1,0 +1,6 @@
+{
+    "using_sensor": "F",
+    "camera" : "0",
+    "port" : "7004",
+    "need_prompt" : "T"
+  }

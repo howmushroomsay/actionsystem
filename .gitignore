@@ -1,0 +1,6 @@
+#忽略课程文件夹
+data/course_action
+#忽略__pychache__
+**/__pycache__
+#忽略单个文件
+1.mp4
