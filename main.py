@@ -4,8 +4,9 @@ import sys
 from PyQt5.QtWidgets import QApplication
 from widgets import *
 from auxiliary_tools import DatabaseOperation
-
+import multiprocessing
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     app = QApplication(sys.argv)
     # win = LogMain()
     student_id = int(sys.argv[1])
