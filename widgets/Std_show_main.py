@@ -60,7 +60,7 @@ def draw(img, skeleton, erro_part=[]):
             y = int(skeleton[joint][1]) + height
             radius = 25
             color = (255, 0, 0)
-            thick = 2
+            thick = 4
             img = cv2.circle(img, (x,y) , radius, color, thick)
     return img
 

@@ -191,9 +191,9 @@ def sim2grade(similarity, grades_threshold=None):
     if grades_threshold is None:
         grades_threshold = [0.6, 0.75, 0.85]
     assert ((similarity >= 0) & (similarity <= 1.0))
-    if similarity < grades_threshold[0]:
-        grade = '差'
-    elif similarity < grades_threshold[1]:
+    # if similarity < grades_threshold[0]:
+    #     grade = '差'
+    if similarity < grades_threshold[1]:
         grade = '中'
     elif similarity < grades_threshold[2]:
         grade = '良'

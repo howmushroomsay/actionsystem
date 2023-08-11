@@ -317,6 +317,7 @@ def seg(stop_event, corqueue, skqueue):
         # 区间结束,若已经进行一次识别,不作处理
         # 未进行识别,截断序列,进行动作识别
         if t_flag == -1:
+            
             if count - start - 5 <= args.min_action or start < 5:
                 # 重置动作起始标志
                 print('动作长度不够')
@@ -344,7 +345,7 @@ def seg(stop_event, corqueue, skqueue):
             for i in range(sk_temp.shape[1]):
                 for j in range(sk_temp.shape[2]):
                     var += sk_temp[:, i, j].var()
-
+            # print(var)
             # 动作开始
             if var > var_threshold and stop_flag:
                 start = count - 5

@@ -32,10 +32,12 @@ class Lessons_Select_Main(QWidget, Ui_Lessons_Select):
     def getCourseInfo(self, is_Standard):
         if is_Standard:
             sql_course = """SELECT course_ID,course_Name,course_Icon,course_Description
-                            FROM course_standard"""
+                            FROM course_standard
+                            WHERE del_flag!=1"""
         else:
             sql_course = """SELECT course_ID,course_Name,course_Icon,course_Description
-                            FROM course_actionresponse"""
+                            FROM course_actionresponse
+                            WHERE del_flag!=1"""
         data = self.db.search_table(sql_course)
         self.course_ID = [data[i][0] for i in range(len(data))]
         self.course_Name = [data[i][1] for i in range(len(data))]

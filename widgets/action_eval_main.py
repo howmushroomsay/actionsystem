@@ -68,41 +68,40 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         return data_base_json["video_ip"], data_base_json["course_dir"]
 
     def requestvideo(self):
-        pos = self.course_path.find('course_action')
         self.video_ip, self.course_dir = self.get_ip()
-        course_url = self.course_dir + self.course_path[pos:]
-        course_url = "http://" + self.video_ip + course_url
+        course_url = "http://" + self.video_ip + self.course_dir + self.course_path
         response = requests.get(course_url)
-        self.course_path = './data' + self.course_path[pos-1:]
+        self.course_path = './data/course_action/std/' + os.path.basename(self.course_path)
         
         if not os.path.exists(os.path.dirname(self.course_path)):
             os.makedirs(os.path.dirname(self.course_path))
         if not os.path.exists(self.course_path):
             with open(self.course_path, 'wb') as f:
                 f.write(response.content)
-        skeleton_url = course_url.replace('/videos/', '/skeleton/')
-        skeleton_url = skeleton_url.replace('.mp4', '.npy')
-
+        
+        skeleton_url = "http://" + self.video_ip + self.course_dir + self.skeleton_path
+        
         npy_path = os.path.splitext(self.course_path)[0] + '.npy'
 
-        response2 = requests.get(skeleton_url)
-        if(response2.status_code != 404):
-            with open(npy_path, 'wb') as f:
-                f.write(response2.content)
+        # response2 = requests.get(skeleton_url)
+        # if(response2.status_code != 404):
+        #     with open(npy_path, 'wb') as f:
+        #         f.write(response2.content)
 
 
 
     def getActionInfo(self):
         # 获取课程视频，存储在本地
-        sql_course = """SELECT action_Path, action_Name, action_Length, course_ID
+        sql_course = """SELECT action_Path, action_Name, course_ID, skeleton_Path
                     FROM action_info
                     WHERE action_ID = {}""".format(self.action_id)
         course_info = self.db.search_table(sql_course)
         
         self.course_path = course_info[0][0]
         self.course_Name = course_info[0][1]
-        self.course_Length = course_info[0][2]
-        self.course_id = course_info[0][3]
+        
+        self.course_id = course_info[0][2]
+        self.skeleton_path = course_info[0][3]
         self.requestvideo()
 
        
@@ -117,8 +116,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         self.player.setVideoOutput(self.videoWidget)
         media = QtCore.QUrl.fromLocalFile(self.course_path)
         self.player.setMedia(QMediaContent(media))
-        self.player.play()
-
+        self.player.play()        
         self.timer_stamp.start(30)
         self.timequeue.put((0, 0))
         self.S_skeleton = []
@@ -152,7 +150,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         # 控制摄像头采集
         current_time = time.time()
         # 判断视频是否播放完
-        if((current_time - self.start_time)*1000 >  500 + self.course_Length):
+        if((current_time - self.start_time)*1000 >  500 + self.player.duration()):
             if self.timequeue.qsize() == 0 and self.corqueue.qsize() == 0:
                 self.timequeue.put((current_time, 1))           
                 self.start_judge()

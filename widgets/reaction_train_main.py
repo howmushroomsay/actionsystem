@@ -56,12 +56,10 @@ class Reaction_Train_Main(QWidget, Ui_Form):
                     WHERE course_ID = {}""".format(self.course_id)
         self.course_path = self.db.search_table(sql_path)[0][0]
         
-        pos = self.course_path.find('course_action')
         self.video_ip, self.course_dir = self.get_ip()
-        course_url = self.course_dir + self.course_path[pos:]
-        course_url = "http://" + self.video_ip + course_url
+        course_url = "http://" + self.video_ip + self.course_dir + self.course_path
         response = requests.get(course_url)
-        self.course_path = './data' + self.course_path[pos-1:]
+        self.course_path = './data/course_action/response/' + os.path.basename(self.course_path)
         
         if not os.path.exists(os.path.dirname(self.course_path)):
             os.makedirs(os.path.dirname(self.course_path))
@@ -71,7 +69,8 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         # 获取检查点信息
         sql_point = """SELECT point_ID, start_time, end_time, action_ID, Scene_Des
                         FROM point_actionresponse
-                        WHERE course_ID = {}""".format(self.course_id)
+                        WHERE course_ID = {}
+                        ORDER BY start_time""".format(self.course_id)
         self.points = self.db.search_table(sql_point)
         # 勾拳 踢腿 勾拳 踢腿 闪躲 闪躲 提膝
         self.points_index = 0
@@ -108,7 +107,7 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         media = QtCore.QUrl.fromLocalFile(self.course_path)
         self.player.setMedia(QMediaContent(media))
         self.player.play()
-        self.timer_stamp.start(25)
+        self.timer_stamp.start(20)
         self.timer_show.start(25)
 
     def change_num(self):
@@ -138,7 +137,7 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         action_class = {-1: '无动作',0: '勾拳', 1: '格挡', 2: '肘击', 3: '直拳',
                     4: '踢腿', 5: '提膝', 6: '戒备', 7: '闪躲'}
         # 直到取出最后一份结果再展示
-        if self.acqueue.qsize():
+        if self.acqueue.qsize() > 0:
             start, end, action, pro = self.acqueue.get()
             
             if pro > 0.5:

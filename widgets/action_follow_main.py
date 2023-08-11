@@ -187,12 +187,10 @@ class Action_Follow_Main(QWidget,Ui_Action_FollowP1):
         self.course_path = course_info[0][0]
         self.course_Name = course_info[0][1]      
         
-        pos = self.course_path.find('course_action')
         self.video_ip, self.course_dir = self.get_ip()
-        course_url = self.course_dir + self.course_path[pos:]
-        course_url = "http://" + self.video_ip + course_url
+        course_url = "http://" + self.video_ip + self.course_dir + self.course_path
         response = requests.get(course_url)
-        self.course_path = './data' + self.course_path[pos-1:]
+        self.course_path = './data/course_action/std/' + os.path.basename(self.course_path)
         
         if not os.path.exists(os.path.dirname(self.course_path)):
             os.makedirs(os.path.dirname(self.course_path))
@@ -203,7 +201,8 @@ class Action_Follow_Main(QWidget,Ui_Action_FollowP1):
         # 获取关键帧信息
         sql_keyframe = """SELECT keyframe_time, keyframe_Description, keyframe_Focus, keyframe_Skeleton
                             FROM keyframe_info
-                            WHERE action_id = {}""".format(self.action_id)
+                            WHERE action_id = {}
+                            ORDER BY keyframe_time""".format(self.action_id)
         
         keyframe_info = self.db.search_table(sql_keyframe)
         self.keyframe_time = [i[0] for i in keyframe_info]

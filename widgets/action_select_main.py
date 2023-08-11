@@ -31,7 +31,7 @@ class Action_Select_Main(QWidget,Ui_Lessons_Select):
     def getCourseInfo(self):
         sql_course = """SELECT action_ID, action_Name, action_Icon, action_Description
                         FROM action_info
-                        WHERE course_id={}""".format(self.course_id)
+                        WHERE course_id={} AND del_flag!=1""".format(self.course_id)
         data = self.db.search_table(sql_course)
         self.action_ID = [data[i][0] for i in range(len(data))]
         self.course_Name = [data[i][1] for i in range(len(data))]

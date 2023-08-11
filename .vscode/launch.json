@@ -11,7 +11,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args" : ["7", "0"]
+            "args" : ["7", "1"]
         },
 
     ]
