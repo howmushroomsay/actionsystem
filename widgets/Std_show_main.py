@@ -21,7 +21,7 @@ def draw(img, skeleton, erro_part=[]):
                "左胳膊" : 1,
                "右胳膊" : 0
                }
-    skeleton = skeleton * 600
+    skeleton = skeleton * 500
     width = img.shape[1] // 2
     height = img.shape[0] // 2
     # 骨架连接关系

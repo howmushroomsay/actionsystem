@@ -191,7 +191,7 @@ class Skeleton:
             frame_data.extend(j.worldpos[0][:3])
 
         header = ["{}.{}".format(j.name, thing) for j in joints
-                  for thing in ("X", "Y", "Z")]
+                  for thing in ("Y", "X", "Z")]
         return header, frame_data
        
     # def change_offsetfromdata(self, displacement):

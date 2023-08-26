@@ -1,5 +1,5 @@
 {
-    "using_sensor": "F",
+    "using_sensor": "T",
     "camera" : "0",
     "port" : "7004",
     "need_prompt" : "T"

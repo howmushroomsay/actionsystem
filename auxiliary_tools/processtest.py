@@ -104,6 +104,9 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, camera=0, actio
         skeleton = np.zeros((33,3))
         skeleton_img = np.zeros((33,3))
         ret, img = cap.read()
+        if not ret:
+            print('camera error')
+            stop_event.set()
         img = cv2.resize(img, (1920, 1080))
         img_RGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if imgqueue != None:
@@ -152,7 +155,7 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, camera=0, actio
 
 
 def draw_empty(img, skeleton):
-    skeleton = skeleton * 600
+    skeleton = skeleton * 500
     width = img.shape[1] // 2
     height = img.shape[0] // 2
     # 骨架连接关系
@@ -241,13 +244,14 @@ def draw_skeleton3d(stop_event, draw_queue):
 def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
     myskeleton = process_bvhfile('data/bvh/test.bvh')
     skeleton_dict, index_dict = get_skdict(path='data/bvh/a.txt')
-    xyz_dict = {'X':0, 'Y':1, 'Z':2}
+    xyz_dict = {'Y':0, 'Z':1, 'X':2}
     client = socket.socket()
     port = int(load_json('./data/sensor/config.json')["port"])
     try:
         client.connect(("127.0.0.1", port))
     except:
         print('disconnect')
+        stop_event.set()
         return
     flag = 0
     last_data = ''
@@ -266,8 +270,12 @@ def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
                 m = xyz_dict[name[1]]
                 skeleton[k][m] = frames[j]
             skeleton_ = skeleton_tran(skeleton) / 10
-            skeleton_[:,1] = -skeleton_[:,1]
-            skeleton_[:,2] = -skeleton_[:,2]
+            # skeleton_[:,1] = -skeleton_[:,1]
+            temp = skeleton_[:,1].copy()
+            skeleton_[:,0] = -skeleton_[:,0]
+            skeleton_[:,1] = -skeleton_[:,2]
+            skeleton_[:,2] = -temp
+            # skeleton_[:,2] = -skeleton_[:,2]
             corqueue.put((t, skeleton_, flag))
             if draw_queue != None:
                 draw_queue.put((flag, skeleton_))

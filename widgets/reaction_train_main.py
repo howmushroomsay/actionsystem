@@ -58,14 +58,25 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         
         self.video_ip, self.course_dir = self.get_ip()
         course_url = "http://" + self.video_ip + self.course_dir + self.course_path
-        response = requests.get(course_url)
-        self.course_path = './data/course_action/response/' + os.path.basename(self.course_path)
+        try:
+            response = requests.get(course_url)
+        except:
+            print('video get error')
+            self.stop_event.set()
+            self.hint_frame.timer_end.stop()
+            self.hint_frame.close()
+            # self.contral.close()
+            return
         
-        if not os.path.exists(os.path.dirname(self.course_path)):
-            os.makedirs(os.path.dirname(self.course_path))
-        if not os.path.exists(self.course_path):
-            with open(self.course_path, 'wb') as f:
-                f.write(response.content)
+        #此处本来应该每个课程使用单独的文件名，但是为了稳定，还是改成一样的吧,
+        # !!!! 仅支持mp4
+        #self.course_path = './data/course_action/response/' + os.path.basename(self.course_path)
+        self.course_path = './data/a.mp4'
+        # if not os.path.exists(os.path.dirname(self.course_path)):
+        #     os.makedirs(os.path.dirname(self.course_path))
+        # if not os.path.exists(self.course_path):
+        with open(self.course_path, 'wb') as f:
+            f.write(response.content)
         # 获取检查点信息
         sql_point = """SELECT point_ID, start_time, end_time, action_ID, Scene_Des
                         FROM point_actionresponse
@@ -111,6 +122,14 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         self.timer_show.start(25)
 
     def change_num(self):
+        if (self.stop_event.is_set()): 
+            self.hint_frame.timer_end.stop()
+            self.parent.show()
+            self.hint_frame.close()
+            self.tip_timer.stop()
+            self.timer_show.stop()
+            # self.contral.close()
+            self.close()
         opacity = QGraphicsOpacityEffect()
         self.lab_tip.setStyleSheet("color: rgb(255, 255, 255);\n"
                                      "background-color: rgb(0, 0, 0);\n"
@@ -235,7 +254,7 @@ class Reaction_Train_Main(QWidget, Ui_Form):
             i.start()
 
     
-    def exit(self, score):
+    def exit(self, score = 0):
         if score != 0:
             sql_upload = """INSERT grade_reaction
                             (student_ID, course_ID, grade, train_time)

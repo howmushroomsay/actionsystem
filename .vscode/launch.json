@@ -5,7 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: std",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args" : ["7", "0"]
+        },
+        {
+            "name": "Python: reaction",
             "type": "python",
             "request": "launch",
             "program": "main.py",

@@ -8,7 +8,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('data','data'),('lib/mediapipe','mediapipe'),
+    datas=[('data','data'),('../lib/mediapipe','mediapipe'),
     ('auxiliary_tools/action_model/configs','auxiliary_tools/action_model/configs'),
     ('auxiliary_tools/action_model/model','auxiliary_tools/action_model/model')],
     hiddenimports=[],

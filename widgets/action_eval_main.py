@@ -83,10 +83,10 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         
         npy_path = os.path.splitext(self.course_path)[0] + '.npy'
 
-        # response2 = requests.get(skeleton_url)
-        # if(response2.status_code != 404):
-        #     with open(npy_path, 'wb') as f:
-        #         f.write(response2.content)
+        response2 = requests.get(skeleton_url)
+        if(response2.status_code != 404):
+            with open(npy_path, 'wb') as f:
+                f.write(response2.content)
 
 
 
@@ -217,7 +217,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         S_sk = [self.S_skeleton[i] for i in disp_S]
         self.grade_window = Std_show(self, S_sk, T_sk, grade, error_part)
         self.grade_window.show()
-
+        self.hide()
     def upload(self):
         # 成绩上传
         sql_upload = """INSERT grade_std 

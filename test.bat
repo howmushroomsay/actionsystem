@@ -1,5 +1,4 @@
-set distpath=../../action_exe/system/dist
-set buildpath=../../action_exe/system/build
+set distpath=../../system/dist
+set buildpath=../../system/build
 
-pyinstaller main.spec --distpath %distpath% --workpath %buildpath%
-python remove.py %distpath%/main
+pyinstaller main.spec --distpath %distpath% --workpath %buildpath% && python remove.py %distpath%/main
