@@ -71,14 +71,14 @@ def skeleton_from_video(video_path):
 
             results = pose.process(image)  # extract landmarks
 
-            skeleton = np.zeros((33, 3))  # mediapipe pose: 33 keypoints [x, y, z, visibility]
+            skeleton = np.zeros((33, 4))  # mediapipe pose: 33 keypoints [x, y, z, visibility]
             # world landmarks
             if results.pose_world_landmarks:
                 for i in range(33):
                     skeleton[i][0] = results.pose_world_landmarks.landmark[i].x
                     skeleton[i][1] = results.pose_world_landmarks.landmark[i].y
                     skeleton[i][2] = results.pose_world_landmarks.landmark[i].z
-                    # skeleton[i][3] = results.pose_world_landmarks.landmark[i].visibility
+                    skeleton[i][3] = results.pose_world_landmarks.landmark[i].visibility
 
             skeleton = skeleton_tran(skeleton)
 
@@ -148,6 +148,37 @@ def rotation_matrix_from_vectors(vec1, vec2):
     rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
     return rotation_matrix
 
+# def cosine_distance(pose1, pose2, keep_dim=False):
+#     """
+#     Function that takes in 2 arguments:
+#         pose1:
+#             Description: takes in the input pose
+#             type expected: list of tuples
+#         pose2:
+#             Description: takes in the test pose
+#             type expected: list of tuples
+#     Returns:
+#         cosdist:
+#             Description: the cosine distance between two poses
+#             type: float
+
+#     """
+#     assert pose1.size == pose2.size
+#     assert len(pose1.shape) == len(pose2.shape)
+#     cosdist = 0
+#     if len(pose1.shape) == 2:
+#         dot_product = np.diag(pose1.dot(np.transpose(pose2)))
+#         pose1_norm = np.linalg.norm(pose1, axis=1) + 1e-6
+#         pose2_norm = np.linalg.norm(pose2, axis=1) + 1e-6
+#         cossim = dot_product / (pose1_norm * pose2_norm)
+#         if keep_dim is False:
+#             cossim = np.average(cossim)
+#         cosdist = 1 - cossim
+#     elif len(pose1.shape) == 1:
+#         cossim = pose1.dot(np.transpose(pose2)) / ((np.linalg.norm(pose1) + 1e-6) * (np.linalg.norm(pose2)) + 1e-6)
+#         cosdist = 1 - cossim
+
+#     return cosdist
 def cosine_distance(pose1, pose2, keep_dim=False):
     """
     Function that takes in 2 arguments:
@@ -163,23 +194,32 @@ def cosine_distance(pose1, pose2, keep_dim=False):
             type: float
 
     """
-    assert pose1.size == pose2.size
+    # assert pose1.size == pose2.size
     assert len(pose1.shape) == len(pose2.shape)
+    assert pose1.shape[0] == pose2.shape[0]
+
     cosdist = 0
     if len(pose1.shape) == 2:
+        kp_w = np.ones([pose1.shape[0], 1])
+        if pose1.shape[1] > 3:
+            for idx in range(pose1.shape[0]):
+                if pose1[idx, 3] < 0.8:
+                    kp_w[idx, 0] = 0
+        pose1 = pose1[:, 0: 3]
+        pose2 = pose2[:, 0: 3]
         dot_product = np.diag(pose1.dot(np.transpose(pose2)))
         pose1_norm = np.linalg.norm(pose1, axis=1) + 1e-6
         pose2_norm = np.linalg.norm(pose2, axis=1) + 1e-6
         cossim = dot_product / (pose1_norm * pose2_norm)
         if keep_dim is False:
-            cossim = np.average(cossim)
+            # cossim = np.average(cossim)
+            cossim = cossim.dot(kp_w) / np.sum(kp_w)
         cosdist = 1 - cossim
     elif len(pose1.shape) == 1:
         cossim = pose1.dot(np.transpose(pose2)) / ((np.linalg.norm(pose1) + 1e-6) * (np.linalg.norm(pose2)) + 1e-6)
         cosdist = 1 - cossim
 
     return cosdist
-
 
 def sim2grade(similarity, grades_threshold=None):
     """
@@ -191,9 +231,9 @@ def sim2grade(similarity, grades_threshold=None):
     if grades_threshold is None:
         grades_threshold = [0.6, 0.75, 0.85]
     assert ((similarity >= 0) & (similarity <= 1.0))
-    # if similarity < grades_threshold[0]:
-    #     grade = '差'
-    if similarity < grades_threshold[1]:
+    if similarity < grades_threshold[0]:
+        grade = '差'
+    elif similarity < grades_threshold[1]:
         grade = '中'
     elif similarity < grades_threshold[2]:
         grade = '良'

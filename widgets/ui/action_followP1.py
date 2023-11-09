@@ -52,7 +52,7 @@ class Ui_Action_FollowP1(object):
         self.label = QtWidgets.QLabel(Action_FollowP1)
         self.label.setGeometry(QtCore.QRect(0, 0, 1920, 80))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/头部5.png"))
+        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/规范.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
 

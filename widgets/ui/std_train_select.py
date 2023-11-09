@@ -21,7 +21,7 @@ class Ui_Std_Train_Select(object):
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.label = QtWidgets.QLabel(Std_Train_Select)
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/头部5.png"))
+        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/规范.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
         self.verticalLayout_5.addWidget(self.label)

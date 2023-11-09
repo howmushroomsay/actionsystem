@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="background">
+    <file>figs/background/反应.png</file>
+    <file>figs/background/规范.png</file>
     <file>figs/background/头部5.png</file>
     <file>figs/icon/弹窗BG1.png</file>
     <file>figs/icon/重新加载.png</file>

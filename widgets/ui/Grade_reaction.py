@@ -19,7 +19,7 @@ class Ui_Grade_reaction(object):
         self.lab_title = QtWidgets.QLabel(Grade_reaction)
         self.lab_title.setGeometry(QtCore.QRect(0, -60, 2081, 251))
         self.lab_title.setText("")
-        self.lab_title.setPixmap(QtGui.QPixmap("c:\\Users\\user\\Desktop\\project\\actionsystem\\widgets\\ui\\../../../../../Documents/WeChat Files/wxid_t3txe9xn4ovz21/data/icons/头部5.png"))
+        self.lab_title.setPixmap(QtGui.QPixmap(":/background/figs/background/反应.png"))
         self.lab_title.setObjectName("lab_title")
         self.tableWidget = QtWidgets.QTableWidget(Grade_reaction)
         self.tableWidget.setGeometry(QtCore.QRect(170, 180, 1571, 801))

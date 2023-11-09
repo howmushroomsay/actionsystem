@@ -7,12 +7,13 @@ import os
 import numpy as np
 from multiprocessing import Event, Queue, Process
 
-from PyQt5.QtWidgets import QApplication,QWidget,QGraphicsOpacityEffect
+from PyQt5.QtWidgets import QApplication,QWidget,QGraphicsOpacityEffect,QMessageBox
 from PyQt5 import QtCore, Qt
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 from auxiliary_tools import skeleton_get, parse_data, draw_skeleton2d,\
     action_evaluation, skeleton_from_video, skeleton_trans_ntu
+from auxiliary_tools.count_main import count
 from .Std_show_main import Std_show
 from .ui import Ui_Action_FollowP1
 
@@ -92,7 +93,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
 
     def getActionInfo(self):
         # 获取课程视频，存储在本地
-        sql_course = """SELECT action_Path, action_Name, course_ID, skeleton_Path
+        sql_course = """SELECT action_Path, action_Name, course_ID, skeleton_path
                     FROM action_info
                     WHERE action_ID = {}""".format(self.action_id)
         course_info = self.db.search_table(sql_course)
@@ -124,6 +125,14 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         self.start_time = time.time()
 
     def change_num(self):
+        if self.stop_event.is_set():
+            self.tip_timer.stop()
+            if self.parent != None:
+                self.parent.show()
+            QMessageBox.warning(self, "警告","请检查传感器连接", QMessageBox.Yes)
+            for i in self.process_id:
+                i.join()
+            self.close()
         # 倒计时，每秒触发一次
         opacity = QGraphicsOpacityEffect()
         self.lab_tip.setStyleSheet("color: rgb(255, 255, 255);\n"
@@ -174,27 +183,47 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         self.timequeue = Queue(10)
         self.corqueue = Queue(10)
         self.drawqueue = Queue(10)
-        process_id = []
-
+        self.process_id = []
+        self.count_queue = None
+        self.count_re = None
+        # 传感器模式下无法实现计数
         if self.using_sensor:
-            process_id.append(Process(target=parse_data,
+            self.process_id.append(Process(target=parse_data,
                                       args=(self.stop_event,
                                             self.timequeue, 
                                             self.corqueue, 
                                             self.drawqueue)))
-            process_id.append(Process(target=draw_skeleton2d, 
+            self.process_id.append(Process(target=draw_skeleton2d, 
                                       args=(self.stop_event, 
                                             self.drawqueue)))
         else:
-            process_id.append(Process(target=skeleton_get, 
+            sql_count = """select count_flag 
+                    from action_info 
+                    where action_ID = {}""".format(self.action_id)
+            self.count_flag = self.db.search_table(sql_count)[0][0] == 1
+            if self.count_flag:
+                self.count_queue = Queue(10)
+                self.count_re = Queue(1)
+                # self.process_id.append(Process(target=count,
+                #                     args=(self.stop_event, 
+                #                             self.count_queue, 
+                #                             self.count_re)))
+            self.process_id.append(Process(target=skeleton_get, 
                                       args=(self.stop_event,  
                                             self.timequeue, 
                                             self.corqueue,
                                             None, 
+                                            None, 
                                             self.camera, False)))
 
-        for i in process_id:
-            i.daemon = True
+
+        temp = Process(target=count,
+                        args=(self.stop_event, 
+                        self.count_queue, 
+                        self.count_re))
+        temp.start()
+        for i in self.process_id:
+            # i.daemon = True
             i.start()
 
     def start_judge(self):
@@ -208,6 +237,10 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
             T_skeleton = skeleton_from_video(self.course_path)
             np.save(npy_path, T_skeleton)
         score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
+        if self.count_flag:
+            while(self.count_re.empty()):
+                continue
+            count = self.count_re.get()
         self.score = grade
         self.timequeue.put((0,2))
         if(len(disp_S) == 0):
@@ -232,7 +265,8 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         self.stop_event.set()
         self.player.stop()
         time.sleep(0.5)
-        self.parent.show()
+        if self.parent != None:
+            self.parent.show()
         self.close()
         
 if __name__ == "__main__":

@@ -23,6 +23,8 @@ class Lessons_Select_Main(QWidget, Ui_Lessons_Select):
 
         self.getCourseInfo(is_Standard)
         self.initfun(is_Standard)
+        if not is_Standard:
+            self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/反应.png"))
 
 
     def windowinit(self):

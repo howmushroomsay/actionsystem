@@ -52,7 +52,7 @@ class Ui_Reaction_Train_PlayerP1(object):
         self.label = QtWidgets.QLabel(Reaction_Train_PlayerP1)
         self.label.setGeometry(QtCore.QRect(0, 0, 1920, 80))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/头部5.png"))
+        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/反应.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
 

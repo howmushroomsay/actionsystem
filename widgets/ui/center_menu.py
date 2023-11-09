@@ -21,7 +21,7 @@ class Ui_Center_Menu(object):
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.label = QtWidgets.QLabel(Center_Menu)
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/头部5.png"))
+        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/规范.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
         self.verticalLayout_3.addWidget(self.label)

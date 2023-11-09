@@ -35,7 +35,7 @@
       <string/>
      </property>
      <property name="pixmap">
-      <pixmap resource="../res.qrc">:/background/figs/background/头部5.png</pixmap>
+      <pixmap resource="../res.qrc">:/background/figs/background/规范.png</pixmap>
      </property>
      <property name="scaledContents">
       <bool>true</bool>
@@ -141,6 +141,7 @@ border-radius: 8px;</string>
              <font>
               <family>微软雅黑</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -244,6 +245,7 @@ border-radius: 10px;
              <font>
               <family>微软雅黑</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -352,6 +354,7 @@ border-radius: 8px;</string>
              <font>
               <family>微软雅黑</family>
               <pointsize>20</pointsize>
+              <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
@@ -677,9 +680,11 @@ QPushButton:hover{padding-bottom:8px}</string>
     </widget>
    </item>
   </layout>
+  <zorder>base_frame</zorder>
+  <zorder>label</zorder>
  </widget>
  <resources>
-  <include location="../action/action_system/widgets/res.qrc"/>
+  <include location="../res.qrc"/>
   <include location="../res.qrc"/>
  </resources>
  <connections/>

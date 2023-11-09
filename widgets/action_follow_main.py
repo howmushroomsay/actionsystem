@@ -209,7 +209,7 @@ class Action_Follow_Main(QWidget,Ui_Action_FollowP1):
         self.keyframe_Description = [i[1] for i in keyframe_info]
         self.keyframe_Focus = [i[2] for i in keyframe_info]
 
-        self.keyframe_Skeleton = [np.reshape(np.frombuffer(i[3], dtype=np.float64), (15,3)) for i in keyframe_info]
+        self.keyframe_Skeleton = [np.reshape(np.frombuffer(i[3], dtype=np.float64), (15,-1))[:, :3] for i in keyframe_info]
         
         self.keyframe_index = 0
         # self.action_path = r'E:\PoseUI\PoseUI\data\camera_video_demo\camera_192.168.1.2.mp4'
@@ -272,7 +272,8 @@ class Action_Follow_Main(QWidget,Ui_Action_FollowP1):
         self.control_widget.plot(self.keyframe_Skeleton[self.keyframe_index])
 
     def back(self):
-        self.parent.show()
+        if self.parent != None:
+            self.parent.show()
         self.close()
         
 if __name__ == "__main__":

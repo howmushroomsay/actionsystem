@@ -104,7 +104,9 @@ class Reaction_Result(QWidget, Ui_Reaction_Result):
             score += score_matrix1[target[i]+1][rec_result[i][2]+1]*0.6 
             score += score_matrix2[target[i]+1][rec_result[i][2]+1]*0.4
         score /= len(target)
-        if score < 70:
+        if score < 50:
+            self.score = '差'
+        elif score < 70:
             self.score = '中'
         elif score < 80:
             self.score = '良'

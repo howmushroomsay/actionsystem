@@ -19,7 +19,7 @@ class Ui_Grade_std(object):
         self.lab_title = QtWidgets.QLabel(Grade_std)
         self.lab_title.setGeometry(QtCore.QRect(0, -60, 2081, 251))
         self.lab_title.setText("")
-        self.lab_title.setPixmap(QtGui.QPixmap("c:\\Users\\user\\Desktop\\project\\actionsystem\\widgets\\ui\\../../../../../Documents/WeChat Files/wxid_t3txe9xn4ovz21/data/icons/头部5.png"))
+        self.lab_title.setPixmap(QtGui.QPixmap(":/background/figs/background/规范.png"))
         self.lab_title.setObjectName("lab_title")
         self.tableWidget = QtWidgets.QTableWidget(Grade_std)
         self.tableWidget.setGeometry(QtCore.QRect(170, 180, 1571, 801))

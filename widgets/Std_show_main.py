@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui
 
 from .ui import Ui_Action_Eval
 
-def draw(img, skeleton, erro_part=[]):
+def draw(img, skeleton, teacher_skeleton, erro_part=[] ):
     # img: 1920*1080*3大小的图片
     # skeleton：ndarray大小(15*3)
     #           骨架的像素坐标，此处取髋关节为中心，人竖直站立头朝向为y正方向
@@ -16,7 +16,16 @@ def draw(img, skeleton, erro_part=[]):
     #
     # 在传入图片上进行15节点骨架的作图，正确节点使用绿色点位标出，
     # 错误点位在绿色点位基础上使用更大的红色圆圈标出
-    gps_idx = { "左腿" : 3,
+
+    # 四肢可见度综合考量
+    # 目前仅仅考虑腿部
+
+    # 如果腿部可见度信息较差，不展示腿部
+    ll = [1, 2, 3, 4, 5, 6]
+    flag = True
+    if (sum(teacher_skeleton[ll,3]) < 2):
+        flag = False
+    gps_idx = { "左腿" : 3, 
                 "右腿" : 2,
                "左胳膊" : 1,
                "右胳膊" : 0
@@ -32,6 +41,8 @@ def draw(img, skeleton, erro_part=[]):
                [13,7],[7,8],[8,9]] #左手
     # 画骨架
     for i in range(len(connect)):
+        if (i < 6 and not flag):
+            continue
         x1 = int(skeleton[connect[i][0]][0]) + width
         y1 = int(skeleton[connect[i][0]][1]) + height
         x2 = int(skeleton[connect[i][1]][0]) + width
@@ -41,6 +52,8 @@ def draw(img, skeleton, erro_part=[]):
         img = cv2.line(img, (x1,y1), (x2,y2), color, thickness=thick)
     # 画关节点
     for i in range(15):
+        if (0 < i < 7 and not flag):
+            continue
         x = int(skeleton[i][0]) + width
         y = int(skeleton[i][1]) + height
         radius = 15
@@ -101,7 +114,7 @@ class Std_show(QWidget, Ui_Action_Eval):
     def draw_left(self):
         # 将教练骨架展示在界面左侧
         skeleton = self.T_skeleton[self.index]
-        left_skeleton = draw(self.img.copy(), skeleton.copy())
+        left_skeleton = draw(self.img.copy(), skeleton.copy(), self.T_skeleton[self.index])
         show = cv2.resize(left_skeleton, (768, 432))
         show = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)
         showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
@@ -111,7 +124,7 @@ class Std_show(QWidget, Ui_Action_Eval):
     def draw_right(self):
         # 将学员骨架展示在界面右侧
         skeleton = self.S_skeleton[self.index]
-        right_skeleton = draw(self.img.copy(), skeleton.copy(), [self.error_part[self.index]])
+        right_skeleton = draw(self.img.copy(), skeleton.copy(), self.T_skeleton[self.index], [self.error_part[self.index]])
         self.lab_info.setText("{}不标准，注意改正".format(self.error_part[self.index]))
         show = cv2.resize(right_skeleton, (768, 432))
         show = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)

@@ -3,7 +3,7 @@ import os
 import requests
 import datetime
 from multiprocessing import Event, Process, Queue
-from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect
+from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect,QMessageBox
 from PyQt5 import  QtCore
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
@@ -129,6 +129,9 @@ class Reaction_Train_Main(QWidget, Ui_Form):
             self.tip_timer.stop()
             self.timer_show.stop()
             # self.contral.close()
+            QMessageBox.warning(self, "警告","请检查传感器连接", QMessageBox.Yes)
+            for i in self.process_id:
+                i.join()
             self.close()
         opacity = QGraphicsOpacityEffect()
         self.lab_tip.setStyleSheet("color: rgb(255, 255, 255);\n"
@@ -209,7 +212,7 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         if self.points[self.points_index][2] > current_time > self.points[self.points_index][1]:
             if self.point_in_flag:
                 self.timequeue.put((current_time, 0))
-                self.lab_info.setText('')
+                # self.lab_info.setText('')
             else:
                 self.timequeue.put((current_time, -2))
                 self.point_in_flag = True
@@ -228,28 +231,29 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         self.skqueue = Queue(10)
         self.acqueue = Queue(10)
 
-        process_id = []
+        self.process_id = []
         if self.using_sensor:
-            process_id.append(Process(target=parse_data, 
+            self.process_id.append(Process(target=parse_data, 
                                       args=(self.stop_event, 
                                             self.timequeue, 
                                             self.corqueue)))
         else:
-            process_id.append(Process(target=skeleton_get,
+            self.process_id.append(Process(target=skeleton_get,
                                       args=(self.stop_event, 
                                             self.timequeue,
                                             self.corqueue,
                                             self.imgqueue,
+                                            None,
                                             self.camera)))
-        process_id.append(Process(target=seg,
+        self.process_id.append(Process(target=seg,
                                   args=(self.stop_event,
                                         self.corqueue, 
                                         self.skqueue))) 
-        process_id.append(Process(target=actionRec, 
+        self.process_id.append(Process(target=actionRec, 
                                   args=(self.stop_event,
                                         self.skqueue,
                                         self.acqueue)))
-        for i in process_id:
+        for i in self.process_id:
             i.daemon = True
             i.start()
 
@@ -267,7 +271,8 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         self.stop_event.set()
         
         self.hint_frame.timer_end.stop()
-        self.parent.show()
+        if self.parent != None:
+            self.parent.show()
         self.hint_frame.close()
         # self.contral.close()
         self.close()

@@ -32,6 +32,7 @@ class Center_Menu_Main(QWidget,Ui_Center_Menu):
     def changeUi(self):
         _translate = QtCore.QCoreApplication.translate
         self.btn_nextWindow.setText(_translate("Center_Menu", "动作反应训练课程选择"))
+        self.label.setPixmap(QtGui.QPixmap(":/background/figs/background/反应.png"))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/figs/icon/对抗训练.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btn_nextWindow.setIcon(icon)

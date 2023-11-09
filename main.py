@@ -1,11 +1,19 @@
 import os
 import sys
-
+import datetime
 from PyQt5.QtWidgets import QApplication
 from widgets import *
 from auxiliary_tools import DatabaseOperation
+f = open('./data/log.txt','w')
+f2 = open('./data/error.txt','w')
+
+sys.stdout = f
+sys.stderr = f2
+print(datetime.datetime.now())
 import multiprocessing
 if __name__ == "__main__":
+    
+    
     multiprocessing.freeze_support()
     app = QApplication(sys.argv)
     # win = LogMain()
@@ -40,5 +48,6 @@ if __name__ == "__main__":
                     os.remove(path_)
                 except:
                     continue
+    f.close()
     sys.exit(code)
     # sys.exit(app.exec_())

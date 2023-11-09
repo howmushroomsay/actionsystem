@@ -38,11 +38,16 @@ def skeleton_tran(c:np.ndarray):
         for i in range(25):
             skeleton[i] -= a
     elif c.shape[0] == 59:
+        # n = [0, 7, 11, 12,
+        #      37, 38, 39, 39, 14, 15, 16, 16,
+        #      4, 5, 6, 6, 1, 2, 3, 3,
+        #      -1,
+        #      39, 39, 16, 16]
         n = [0, 7, 11, 12,
-             37, 38, 39, 39, 14, 15, 16, 16,
-             4, 5, 6, 6, 1, 2, 3, 3,
+             14, 15, 16, 16, 37, 38, 39, 39,
+             1, 2, 3, 3, 4, 5, 6, 6,
              -1,
-             39, 39, 16, 16]
+             16, 16, 39, 39,]
         for i in range(3):
             skeleton[20][i] = (c[13][i] + c[36][i]) / 2
         for i in range(25):
@@ -98,7 +103,7 @@ def draw(img, skeleton):
         cv2.circle(img, (int(skeleton_[i][0]), int(skeleton_[i][1])), 10, (0,0,255), -1)
     return img
 
-def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, camera=0, action_train=True):
+def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=None, camera=0, action_train=True):
     cap = cv2.VideoCapture(camera)
     while not stop_event.is_set():
         skeleton = np.zeros((33,3))
@@ -114,6 +119,8 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, camera=0, actio
         # img = cv2.flip(img, 1)
         if timequeue.qsize() > 0:
             t, flag = timequeue.get()
+            if count_queue != None:
+                count_queue.put((flag,img_RGB))
             if not action_train:                
                 if(flag == 1):
                     cv2.destroyWindow('Student Pose')
@@ -197,22 +204,23 @@ def draw_skeleton2d(stop_event, draw_queue):
     img = cv2.imread('./data/empty.png')
     img = cv2.resize(img, (1920,1080))
     while not stop_event.is_set():
-        flag, skeleton = draw_queue.get()             
-        if(flag == 1):
-            cv2.destroyWindow('Student Pose')
-            continue
-        elif(flag==2):
-            break
-        
-        skeleton = skeleton_trans_ntu(skeleton)
-        img1 = draw_empty(img.copy(), skeleton)
-        img1 = cv2.resize(img1, (480, 270))
-        cv2.namedWindow('Student Pose', cv2.WINDOW_AUTOSIZE)
-        cv2.resizeWindow('Student Pose', 480, 270)
-        cv2.moveWindow('Student Pose', 1440, 0)
-        cv2.setWindowProperty('Student Pose', cv2.WND_PROP_TOPMOST, 1)
-        cv2.imshow('Student Pose', img1)
-        cv2.waitKey(1)
+        if draw_queue.qsize() > 0:
+            flag, skeleton = draw_queue.get()             
+            if(flag == 1):
+                cv2.destroyWindow('Student Pose')
+                continue
+            elif(flag==2):
+                break
+            
+            skeleton = skeleton_trans_ntu(skeleton)
+            img1 = draw_empty(img.copy(), skeleton)
+            img1 = cv2.resize(img1, (480, 270))
+            cv2.namedWindow('Student Pose', cv2.WINDOW_AUTOSIZE)
+            cv2.resizeWindow('Student Pose', 480, 270)
+            cv2.moveWindow('Student Pose', 1440, 0)
+            cv2.setWindowProperty('Student Pose', cv2.WND_PROP_TOPMOST, 1)
+            cv2.imshow('Student Pose', img1)
+            cv2.waitKey(1)
         
 def draw_skeleton3d(stop_event, draw_queue):
     fig = plt.figure()
@@ -272,7 +280,7 @@ def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
             skeleton_ = skeleton_tran(skeleton) / 10
             # skeleton_[:,1] = -skeleton_[:,1]
             temp = skeleton_[:,1].copy()
-            skeleton_[:,0] = -skeleton_[:,0]
+            skeleton_[:,0] = skeleton_[:,0]
             skeleton_[:,1] = -skeleton_[:,2]
             skeleton_[:,2] = -temp
             # skeleton_[:,2] = -skeleton_[:,2]
