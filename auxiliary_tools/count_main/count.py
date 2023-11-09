@@ -3,7 +3,7 @@ import torch
 import torchvision.transforms as T
 from .repnet.model import RepNet
 
-def count(stop_event, frames_queue, count_queue):
+def count_fun(stop_event, frames_queue, count_queue):
     weights = './auxiliary_tools\count_main\checkpoints\pytorch_weights.pth'
     # weights = './checkpoints\pytorch_weights.pth'
     strides = [1,2,3,4,]
@@ -30,7 +30,7 @@ def count(stop_event, frames_queue, count_queue):
             continue
         flag, frame = frames_queue.get()
         frames.append(transform(frame))
-        if flag == 2:
+        if flag == 1:
             break
 
     print('counting...')

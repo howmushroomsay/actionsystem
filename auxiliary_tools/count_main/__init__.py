@@ -1,1 +1,1 @@
-from .count import count
+from .count import count_fun

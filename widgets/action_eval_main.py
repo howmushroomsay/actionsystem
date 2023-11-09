@@ -13,7 +13,7 @@ from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 from auxiliary_tools import skeleton_get, parse_data, draw_skeleton2d,\
     action_evaluation, skeleton_from_video, skeleton_trans_ntu
-from auxiliary_tools.count_main import count
+from auxiliary_tools.count_main import count_fun
 from .Std_show_main import Std_show
 from .ui import Ui_Action_FollowP1
 
@@ -217,11 +217,12 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                                             self.camera, False)))
 
 
-        temp = Process(target=count,
+        temp = Process(target=count_fun,
                         args=(self.stop_event, 
                         self.count_queue, 
                         self.count_re))
         temp.start()
+        temp.join()
         for i in self.process_id:
             # i.daemon = True
             i.start()
@@ -237,7 +238,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
             T_skeleton = skeleton_from_video(self.course_path)
             np.save(npy_path, T_skeleton)
         score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
-        if self.count_flag:
+        if self.count_flag and not self.using_sensor:
             while(self.count_re.empty()):
                 continue
             count = self.count_re.get()
