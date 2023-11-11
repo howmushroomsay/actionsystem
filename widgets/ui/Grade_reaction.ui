@@ -22,14 +22,14 @@
      <x>0</x>
      <y>-60</y>
      <width>2081</width>
-     <height>251</height>
+     <height>200</height>
     </rect>
    </property>
    <property name="text">
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>../../../../../Documents/WeChat Files/wxid_t3txe9xn4ovz21/data/icons/头部5.png</pixmap>
+    <pixmap resource="../res.qrc">:/background/figs/background/反应.png</pixmap>
    </property>
   </widget>
   <widget class="QTableWidget" name="tableWidget">
@@ -215,16 +215,17 @@ color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>70</y>
+     <x>790</x>
+     <y>20</y>
      <width>320</width>
-     <height>41</height>
+     <height>200</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>微软雅黑</family>
      <pointsize>24</pointsize>
+     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>

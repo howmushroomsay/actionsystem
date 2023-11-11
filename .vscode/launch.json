@@ -22,6 +22,15 @@
             "justMyCode": true,
             "args" : ["7", "1"]
         },
+        {
+            "name": "std_single",
+            "type": "python",
+            "request": "launch",
+            "program": "main1.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args" : ["7", "31", "2"]
+        },
 
     ]
 }

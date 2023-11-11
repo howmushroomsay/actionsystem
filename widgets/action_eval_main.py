@@ -213,7 +213,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                                             self.timequeue, 
                                             self.corqueue,
                                             None, 
-                                            None, 
+                                            self.count_queue, 
                                             self.camera, False)))
 
 
@@ -222,7 +222,6 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                         self.count_queue, 
                         self.count_re))
         temp.start()
-        temp.join()
         for i in self.process_id:
             # i.daemon = True
             i.start()
@@ -238,6 +237,8 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
             T_skeleton = skeleton_from_video(self.course_path)
             np.save(npy_path, T_skeleton)
         score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
+        count = -1
+        np.save('./data/student.npy',self.S_skeleton)
         if self.count_flag and not self.using_sensor:
             while(self.count_re.empty()):
                 continue
@@ -249,7 +250,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
             disp_T = [0]
         T_sk = [T_skeleton[i] for i in disp_T]
         S_sk = [self.S_skeleton[i] for i in disp_S]
-        self.grade_window = Std_show(self, S_sk, T_sk, grade, error_part)
+        self.grade_window = Std_show(self, S_sk, T_sk, grade, count, error_part)
         self.grade_window.show()
         self.hide()
     def upload(self):

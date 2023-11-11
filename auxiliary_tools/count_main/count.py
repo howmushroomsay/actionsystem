@@ -1,5 +1,5 @@
 import numpy as np
-import torch
+import torch,math
 import torchvision.transforms as T
 from .repnet.model import RepNet
 
@@ -29,9 +29,10 @@ def count_fun(stop_event, frames_queue, count_queue):
         if frames_queue.qsize() == 0:
             continue
         flag, frame = frames_queue.get()
-        frames.append(transform(frame))
         if flag == 1:
             break
+        frames.append(transform(frame))
+        
 
     print('counting...')
     best_stride, best_confidence, best_period_count,  = None, None, None
@@ -64,5 +65,5 @@ def count_fun(stop_event, frames_queue, count_queue):
             best_confidence,  best_period_count = confidence, period_count
     print(best_period_count.cpu()[-1])
     print(len(frames))
-    count_queue.put(best_period_count.cpu()[-1])
+    count_queue.put(math.ceil(best_period_count.cpu()[-1].item()))
 

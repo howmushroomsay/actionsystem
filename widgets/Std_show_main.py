@@ -80,7 +80,7 @@ def draw(img, skeleton, teacher_skeleton, erro_part=[] ):
 #一个画面展示教练骨架，一个画面展示学员骨架
 class Std_show(QWidget, Ui_Action_Eval):
     # def __init__(self, parent, S_skeleton, T_skeleton, ) -> None:
-    def __init__(self, parent, S_skeleton, T_skeleton, score, error_part=[]) -> None:
+    def __init__(self, parent, S_skeleton, T_skeleton, score, count, error_part=[]) -> None:
         # parent: 父界面
         # db: 数据库
         # S_skeleton: 学员骨架 list[ndarray]
@@ -96,6 +96,7 @@ class Std_show(QWidget, Ui_Action_Eval):
         self.score = score
         self.S_skeleton = S_skeleton
         self.T_skeleton = T_skeleton
+        self.count = count
         self.error_part = error_part
         self.img = cv2.imread('./data/empty.png')
         self.img = cv2.resize(self.img, (1920,1080))
@@ -106,8 +107,10 @@ class Std_show(QWidget, Ui_Action_Eval):
         self.btn_left.clicked.connect(self.preframe)
         self.btn_back.clicked.connect(self.exit)
         self.btn_upload.clicked.connect(self.upload)
-
-        self.lab_text.setText('您本次的训练成绩为: {}'.format(self.score))
+        if self.count == -1:
+            self.lab_text.setText('您本次的训练成绩为: {}'.format(self.score))
+        else :
+            self.lab_text.setText('您本次的训练成绩为: {}\n动作次数为: {}'.format(self.score, self.count))
         self.index = 0
         self.show_skeleton()
     

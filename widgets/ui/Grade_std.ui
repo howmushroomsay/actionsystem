@@ -22,14 +22,23 @@
      <x>0</x>
      <y>-60</y>
      <width>2081</width>
-     <height>251</height>
+     <height>200</height>
     </rect>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>200</height>
+    </size>
    </property>
    <property name="text">
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>../../../../../Documents/WeChat Files/wxid_t3txe9xn4ovz21/data/icons/头部5.png</pixmap>
+    <pixmap resource="../res.qrc">:/background/figs/background/规范.png</pixmap>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
    </property>
   </widget>
   <widget class="QTableWidget" name="tableWidget">
@@ -235,8 +244,8 @@ color: rgb(255, 255, 255);</string>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>70</y>
+     <x>820</x>
+     <y>120</y>
      <width>320</width>
      <height>41</height>
     </rect>
@@ -245,6 +254,7 @@ color: rgb(255, 255, 255);</string>
     <font>
      <family>微软雅黑</family>
      <pointsize>24</pointsize>
+     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
