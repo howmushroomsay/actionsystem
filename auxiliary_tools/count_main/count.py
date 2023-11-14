@@ -9,7 +9,6 @@ def count_fun(stop_event, frames_queue, count_queue):
     strides = [1,2,3,4,]
     crop_size = 360
     batch_size = 16
-    print("?????????")
     model = RepNet()
     state_dict = torch.load(weights)
     model.load_state_dict(state_dict)
@@ -24,7 +23,6 @@ def count_fun(stop_event, frames_queue, count_queue):
         T.Normalize(mean=0.5, std=0.5),
     ])
     frames = []
-    print("?????????")
     while not stop_event.is_set():
         if frames_queue.qsize() == 0:
             continue

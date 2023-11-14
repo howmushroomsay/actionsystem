@@ -21,11 +21,11 @@ def load_json(json_path):
     return data_json
 
 def skeleton_tran(c:np.ndarray):
-    skeleton = np.zeros([25, 3])
+    skeleton = np.zeros([25, c.shape[1]])
     if c.shape[0] == 33:
         n = [-1, -1, -1, -1, 12, 14, 16, 22, 11, 13, 15, 21,
             24, 26, 28, 32, 23, 25, 27, 31, -1, 20, 22, 19, 21]  
-        for i in range(3):
+        for i in range(c.shape[1]):
             skeleton[0][i] = (c[23][i] + c[24][i]) / 2
             skeleton[1][i] = (c[11][i] + c[12][i] + c[23][i] + c[24][i]) / 4
             skeleton[2][i] = (c[9][i] + c[10][i] + c[11][i] + c[12][i]) / 4
@@ -48,7 +48,7 @@ def skeleton_tran(c:np.ndarray):
              1, 2, 3, 3, 4, 5, 6, 6,
              -1,
              16, 16, 39, 39,]
-        for i in range(3):
+        for i in range(c.shape[1]):
             skeleton[20][i] = (c[13][i] + c[36][i]) / 2
         for i in range(25):
             if n[i] != -1:
@@ -106,7 +106,7 @@ def draw(img, skeleton):
 def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=None, camera=0, action_train=True):
     cap = cv2.VideoCapture(camera)
     while not stop_event.is_set():
-        skeleton = np.zeros((33,3))
+        skeleton = np.zeros((33,4))
         skeleton_img = np.zeros((33,3))
         ret, img = cap.read()
         if not ret:
@@ -120,7 +120,7 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=Non
         if timequeue.qsize() > 0:
             t, flag = timequeue.get()
             if count_queue != None:
-                count_queue.put((flag,img_RGB))
+                count_queue.put((flag,cv2.resize(img_RGB, (480, 360))))
             if not action_train:                
                 if(flag == 1):
                     cv2.destroyWindow('Student Pose')
@@ -134,7 +134,7 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=Non
                     skeleton[i][0] = results.pose_world_landmarks.landmark[i].x
                     skeleton[i][1] = results.pose_world_landmarks.landmark[i].y
                     skeleton[i][2] = results.pose_world_landmarks.landmark[i].z
-
+                    skeleton[i][3] = results.pose_world_landmarks.landmark[i].visibility
             # 用于规范训练画图
             if not action_train:
                 if results.pose_world_landmarks:

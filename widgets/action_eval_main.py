@@ -69,6 +69,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         return data_base_json["video_ip"], data_base_json["course_dir"]
 
     def requestvideo(self):
+        #该方法用于请求视频文件和骨架文件，并保存到本地
         self.video_ip, self.course_dir = self.get_ip()
         course_url = "http://" + self.video_ip + self.course_dir + self.course_path
         response = requests.get(course_url)
@@ -80,7 +81,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
             with open(self.course_path, 'wb') as f:
                 f.write(response.content)
         
-        skeleton_url = "http://" + self.video_ip + self.course_dir + self.skeleton_path
+        skeleton_url = "http://" + self.video_ip + self.course_dir + self.skeleton_path.replace('\\','/')
         
         npy_path = os.path.splitext(self.course_path)[0] + '.npy'
 
@@ -88,8 +89,6 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         if(response2.status_code != 404):
             with open(npy_path, 'wb') as f:
                 f.write(response2.content)
-
-
 
     def getActionInfo(self):
         # 获取课程视频，存储在本地
@@ -100,16 +99,9 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         
         self.course_path = course_info[0][0]
         self.course_Name = course_info[0][1]
-        
         self.course_id = course_info[0][2]
         self.skeleton_path = course_info[0][3]
         self.requestvideo()
-
-       
-        # self.action_path = r'E:\PoseUI\PoseUI\data\camera_video_demo\camera_192.168.1.2.mp4'
-        # self.action_Length = 1500
-        # self.action_Name = ",adad"
-        # self.action_path = r'C:\Users\user\Desktop\新建文件夹\test_video\A03N042.mp4'
     
     def ready(self):
         # 初始化视频播放控件，开启播放过程中需要的两个定时器
@@ -202,12 +194,12 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                     where action_ID = {}""".format(self.action_id)
             self.count_flag = self.db.search_table(sql_count)[0][0] == 1
             if self.count_flag:
-                self.count_queue = Queue(10)
+                self.count_queue = Queue(1000)
                 self.count_re = Queue(1)
-                # self.process_id.append(Process(target=count,
-                #                     args=(self.stop_event, 
-                #                             self.count_queue, 
-                #                             self.count_re)))
+                self.process_id.append(Process(target=count_fun,
+                                    args=(self.stop_event, 
+                                            self.count_queue, 
+                                            self.count_re)))
             self.process_id.append(Process(target=skeleton_get, 
                                       args=(self.stop_event,  
                                             self.timequeue, 
@@ -216,19 +208,12 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                                             self.count_queue, 
                                             self.camera, False)))
 
-
-        temp = Process(target=count_fun,
-                        args=(self.stop_event, 
-                        self.count_queue, 
-                        self.count_re))
-        temp.start()
         for i in self.process_id:
             # i.daemon = True
             i.start()
 
     def start_judge(self):
         # 动作比对和结果展示
-
         self.timer_collect.stop()
         npy_path = os.path.splitext(self.course_path)[0] + '.npy'
         if os.path.exists(npy_path):
@@ -236,9 +221,14 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         else:
             T_skeleton = skeleton_from_video(self.course_path)
             np.save(npy_path, T_skeleton)
-        score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
+        # T_skeleton = np.load("./student1.npy")
+        if self.course_Name == "心肺复苏":
+            score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
+        else:
+            score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
+        print(score)
         count = -1
-        np.save('./data/student.npy',self.S_skeleton)
+        # np.save('./data/student.npy',self.S_skeleton)
         if self.count_flag and not self.using_sensor:
             while(self.count_re.empty()):
                 continue

@@ -100,9 +100,6 @@ def keyframe_extract(skeleton_list, visibility=0.8, movements=0.15):
     """
     skeleton_list = np.asarray(skeleton_list)
     (frames, kps, visib) = skeleton_list.shape
-    # frames = skeleton_list.shape[0]
-    # kps = skeleton_list.shape[1]
-    # visib = skeleton_list.shape[2]
 
     key_frames = []
     skeleton_filter_list = []
@@ -282,7 +279,7 @@ def action_evaluation(skeleton_T, skeleton_S, keypoints=None, calibration=True, 
         skeleton_S_kps = skeleton_S[:, keypoints, :]
 
     frames_T, skeleton_T_filted = keyframe_extract(skeleton_T_kps, visibility=vis_param, movements=mov_param)
-    frames_S, skeleton_S_filted = keyframe_extract(skeleton_S_kps, visibility=vis_param, movements=mov_param)
+    frames_S, skeleton_S_filted = keyframe_extract(skeleton_S_kps, visibility=0, movements=mov_param)
 
     skeleton_T_filted = np.asarray(skeleton_T_filted)
     skeleton_S_filted = np.asarray(skeleton_S_filted)
@@ -376,11 +373,13 @@ def action_evaluation(skeleton_T, skeleton_S, keypoints=None, calibration=True, 
             index_f = int(fl * idx)
             disp_T.append(frames_T[match_T_filtered[index[index_f]]])
             disp_S.append(frames_S[match_S_filtered[index[index_f]]])
-    else:
+    elif len(index) > 0:
         for idx in range(len(index)):
             disp_T.append(frames_T[match_T_filtered[index[idx]]])
             disp_S.append(frames_S[match_S_filtered[index[idx]]])
-
+    else:
+        disp_S = [0]
+        disp_T = [0]
     # step 6
     kps_gps = [["LKnee", "LAnkle", "LHip"],  # 左腿
                ["RKnee", "RAnkle", "RHip"],  # 右腿

@@ -5,5 +5,4 @@ data/course_action
 #忽略单个文件
 1.mp4
 
-./vscode
 *.mp4
