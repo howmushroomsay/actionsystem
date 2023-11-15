@@ -87,7 +87,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         npy_path = os.path.splitext(self.course_path)[0] + '.npy'
 
         response2 = requests.get(skeleton_url)
-        if(response2.status_code != 404):
+        if(response2.status_code == 200):
             with open(npy_path, 'wb') as f:
                 f.write(response2.content)
 

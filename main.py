@@ -6,11 +6,15 @@ from widgets import *
 from auxiliary_tools import DatabaseOperation
 
 import logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                    datefmt='%a, %d %b %Y %H:%M:%S',
-                    filename='./data/app.log',
-                    filemode='a')
+from logging.handlers import RotatingFileHandler
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+handler = RotatingFileHandler('./data/log/app.log', maxBytes=1e6, backupCount=5)
+logging.getLogger('').setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                              datefmt='%a, %d %b %Y %H:%M:%S')
+handler.setFormatter(formatter)
+logging.getLogger().addHandler(handler)
 
 logging.info("WELCOME TO THE SYSTEM")
 import multiprocessing

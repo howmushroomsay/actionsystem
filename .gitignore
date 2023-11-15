@@ -7,4 +7,4 @@ data/course_action
 #忽略npy文件
 *.npy
 #忽略log文件
-*.log
+data/log
