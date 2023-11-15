@@ -10,6 +10,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
+if not os.path.exists('./data/log'):
+    os.mkdir('./data/log')
 handler = RotatingFileHandler('./data/log/app.log', maxBytes=1e6, backupCount=5)
 logging.getLogger('').setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
