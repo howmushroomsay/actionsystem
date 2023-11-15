@@ -2,7 +2,9 @@
 data/course_action
 #忽略__pychache__
 **/__pycache__
-#忽略单个文件
-1.mp4
-
+#忽略视频文件
 *.mp4
+#忽略npy文件
+*.npy
+#忽略log文件
+*.log
