@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import requests
+import logging
 import numpy as np
 
 from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout
@@ -145,7 +146,7 @@ class Action_Follow_Main(QWidget,Ui_Action_FollowP1):
         super(Action_Follow_Main, self).__init__()
         self.setupUi(self)
         self.windowinit()
-
+        
         self.control_widget = Action_Follow_TOP(self)
         # self.video_bar = Action_Follow_Bar()
         # self.video_bar.show()
@@ -154,6 +155,7 @@ class Action_Follow_Main(QWidget,Ui_Action_FollowP1):
         self.parent = parent
         self.db = db
         self.action_id = action_id
+        logging.info("watch actionid{}".format(self.action_id))
         self.getActionInfo()
         self.initfun()
         

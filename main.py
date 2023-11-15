@@ -4,12 +4,15 @@ import datetime
 from PyQt5.QtWidgets import QApplication
 from widgets import *
 from auxiliary_tools import DatabaseOperation
-f = open('./data/log.txt','w')
-f2 = open('./data/error.txt','w')
 
-sys.stdout = f
-sys.stderr = f2
-print(datetime.datetime.now())
+import logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S',
+                    filename='./data/log.txt',
+                    filemode='a')
+
+logging.info("WELCOME TO THE SYSTEM")
 import multiprocessing
 if __name__ == "__main__":
     
@@ -24,8 +27,10 @@ if __name__ == "__main__":
 
     db = DatabaseOperation()
     if window_type == 0:
+        logging.info("student{} start std_train".format(student_id))
         win = Center_Menu_Main(db, student_id, True)
     else:
+        logging.info("student{} start reaction_train".format(student_id))
         win = Center_Menu_Main(db, student_id, False)
     # camera = "rtsp://admin:nvidia001@192.168.1.64/Streaming/Channels/1"
     win.show()
@@ -48,6 +53,5 @@ if __name__ == "__main__":
                     os.remove(path_)
                 except:
                     continue
-    f.close()
     sys.exit(code)
     # sys.exit(app.exec_())

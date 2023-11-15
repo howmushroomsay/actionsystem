@@ -6,6 +6,7 @@ import requests
 import os
 import numpy as np
 from multiprocessing import Event, Queue, Process
+import logging
 
 from PyQt5.QtWidgets import QApplication,QWidget,QGraphicsOpacityEffect,QMessageBox
 from PyQt5 import QtCore, Qt
@@ -27,12 +28,12 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         self.student_id = student_id
         self.setupUi(self)
         self.windowinit()
-        
+        logging.info("student{} train std, action_id:{}".format(self.student_id, self.action_id))
         self.load_config()
         self.start_process()
         self.getActionInfo()
         self.initfun()
-    
+        
     def windowinit(self):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
@@ -226,7 +227,6 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
             score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
         else:
             score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
-        print(score)
         count = -1
         # np.save('./data/student.npy',self.S_skeleton)
         if self.count_flag and not self.using_sensor:
@@ -234,6 +234,7 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                 continue
             count = self.count_re.get()
         self.score = grade
+        logging.info("student:{} action_id:{} score:{} count:{}".format(self.student_id, self.action_id, score, count))
         self.timequeue.put((0,2))
         if(len(disp_S) == 0):
             disp_S = [0]

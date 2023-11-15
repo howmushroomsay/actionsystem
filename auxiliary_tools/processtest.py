@@ -1,6 +1,7 @@
 import cv2, json
 import torch
 import socket
+import logging
 import mediapipe as mp
 import numpy as np
 import matplotlib.pyplot as plt
@@ -104,13 +105,19 @@ def draw(img, skeleton):
     return img
 
 def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=None, camera=0, action_train=True):
+    logging.info('skeleton_get process start')
     cap = cv2.VideoCapture(camera)
+    ret, img = cap.read()
+    if not ret:
+        logging.error('camera error')
+        stop_event.set()
+        return
     while not stop_event.is_set():
         skeleton = np.zeros((33,4))
         skeleton_img = np.zeros((33,3))
         ret, img = cap.read()
         if not ret:
-            print('camera error')
+            logging.error('camera error')
             stop_event.set()
         img = cv2.resize(img, (1920, 1080))
         img_RGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -157,9 +164,8 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=Non
             #33节点骨架转25节点骨架
             skeleton_ = skeleton_tran(skeleton)
             corqueue.put((t, skeleton_, flag))
-
     cap.release()
-
+    logging.info('skeleton_get process end')
 
 def draw_empty(img, skeleton):
     skeleton = skeleton * 500
@@ -201,6 +207,7 @@ def skeleton_trans_ntu(landmarks):
     return skeleton
 
 def draw_skeleton2d(stop_event, draw_queue):
+    logging.info("draw_skeleton2d process start")
     img = cv2.imread('./data/empty.png')
     img = cv2.resize(img, (1920,1080))
     while not stop_event.is_set():
@@ -221,7 +228,7 @@ def draw_skeleton2d(stop_event, draw_queue):
             cv2.setWindowProperty('Student Pose', cv2.WND_PROP_TOPMOST, 1)
             cv2.imshow('Student Pose', img1)
             cv2.waitKey(1)
-        
+    logging.info("draw_skeleton2d process end")    
 def draw_skeleton3d(stop_event, draw_queue):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -258,12 +265,12 @@ def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
     try:
         client.connect(("127.0.0.1", port))
     except:
-        print('disconnect')
+        logging.error('sensor connect error')
         stop_event.set()
         return
     flag = 0
     last_data = ''
-    print('start  parse')
+    logging.info('parse_data process start')
     while not stop_event.is_set():
         data = client.recv(3000)
         displacemenet, rotation, last_data = read_data(last_data, data)
@@ -287,9 +294,8 @@ def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
             corqueue.put((t, skeleton_, flag))
             if draw_queue != None:
                 draw_queue.put((flag, skeleton_))
-
+    logging.info('parse_data process end')
 def seg(stop_event, corqueue, skqueue):
-    seg_arg = edict()
     """
     window： 求方差的窗口大小
     min_action： 动作持续的最短时间
@@ -297,6 +303,8 @@ def seg(stop_event, corqueue, skqueue):
     var_threshold2：动作烈度较高时的方差阈值
     var_diff_threshold：判断动作烈度的阈值
     """
+    logging.info("seg process start")
+    seg_arg = edict()
     seg_arg.window = 10
     seg_arg.min_action = 15
     seg_arg.var_threshold = 300
@@ -336,7 +344,7 @@ def seg(stop_event, corqueue, skqueue):
             
             if count - start - 5 <= args.min_action or start < 5:
                 # 重置动作起始标志
-                print('动作长度不够')
+                logging.info("动作长度不够")
                 stop_flag = True
                 skqueue.put((0, 0, 0))
             # 正常结束
@@ -393,12 +401,12 @@ def seg(stop_event, corqueue, skqueue):
                     count = 0
                     sk_list = []
                     t_list = []
-
+    logging.info("seg process end")
 def actionRec(stop_event, skqueue, acqueue):
+    logging.info("actionRec process start")
     Action = Action_Recognizer()
     action_class = {-1: '无动作',0: '勾拳', 1: '格挡', 2: '肘击', 3: '直拳',
                     4: '踢腿', 5: '提膝', 6: '戒备', 7: '闪躲'}
-
     while not stop_event.is_set():
         if skqueue.qsize() > 0:
             skeleton, start, end = skqueue.get()
@@ -409,6 +417,6 @@ def actionRec(stop_event, skqueue, acqueue):
                 skeleton = torch.tensor(skeleton)
                 pro, action = Action.eval(skeleton)
                 acqueue.put((start, end, action, pro))
-            print(start, end, action_class[action], pro)
-
+            logging.info(start, end, action_class[action], pro)
+    logging.info("actionRec process end")
             

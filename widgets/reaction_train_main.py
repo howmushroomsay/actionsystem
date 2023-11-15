@@ -2,6 +2,7 @@ import json
 import os
 import requests
 import datetime
+import logging
 from multiprocessing import Event, Process, Queue
 from PyQt5.QtWidgets import QWidget, QGraphicsOpacityEffect,QMessageBox
 from PyQt5 import  QtCore
@@ -21,7 +22,7 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         self.student_id = student_id      
         self.setupUi(self)
         self.windowinit()
-
+        logging.info("student{} train reaction, course_id:{}".format(self.student_id, self.course_id))
         self.hint_frame = Reaction_Train_Player_Frame(200,self)
 
         self.load_config()
@@ -61,7 +62,7 @@ class Reaction_Train_Main(QWidget, Ui_Form):
         try:
             response = requests.get(course_url)
         except:
-            print('video get error')
+            logging.error('video get error')
             self.stop_event.set()
             self.hint_frame.timer_end.stop()
             self.hint_frame.close()

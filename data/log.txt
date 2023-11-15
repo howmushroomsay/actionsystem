@@ -1,10 +1,19 @@
-2023-11-14 21:29:51.542773
-0.0
-0.0
-.
-stride:  1
-stride:  2
-stride:  3
-stride:  4
-tensor(0.)
-370
+Wed, 15 Nov 2023 09:26:54 main.py[line:22] INFO start
+Wed, 15 Nov 2023 09:26:54 main.py[line:37] INFO student7 start std_train
+Wed, 15 Nov 2023 09:27:36 main.py[line:22] INFO start
+Wed, 15 Nov 2023 09:27:36 main.py[line:37] INFO student7 start std_train
+Wed, 15 Nov 2023 09:27:40 action_follow_main.py[line:158] INFO watch actionid2
+Wed, 15 Nov 2023 09:27:56 action_eval_main.py[line:31] INFO student7 train std, action_id:2
+Wed, 15 Nov 2023 09:27:59 main.py[line:22] INFO start
+Wed, 15 Nov 2023 09:27:59 processtest.py[line:108] INFO skeleton_get process start
+Wed, 15 Nov 2023 09:28:14 action_eval_main.py[line:237] INFO student:7 action_id:2 score:0.0 count:-1
+Wed, 15 Nov 2023 09:28:14 processtest.py[line:168] INFO skeleton_get process end
+Wed, 15 Nov 2023 09:29:18 action_eval_main.py[line:31] INFO student7 train std, action_id:2
+Wed, 15 Nov 2023 09:29:21 main.py[line:22] INFO start
+Wed, 15 Nov 2023 09:29:21 processtest.py[line:108] INFO skeleton_get process start
+Wed, 15 Nov 2023 09:29:21 processtest.py[line:112] ERROR camera error
+Wed, 15 Nov 2023 09:29:39 action_eval_main.py[line:31] INFO student7 train std, action_id:2
+Wed, 15 Nov 2023 09:29:41 main.py[line:22] INFO start
+Wed, 15 Nov 2023 09:29:41 processtest.py[line:108] INFO skeleton_get process start
+Wed, 15 Nov 2023 09:29:56 action_eval_main.py[line:237] INFO student:7 action_id:2 score:0.0 count:-1
+Wed, 15 Nov 2023 09:29:57 processtest.py[line:168] INFO skeleton_get process end
