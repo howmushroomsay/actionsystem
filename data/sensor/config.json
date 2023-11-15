@@ -1,6 +1,6 @@
 {
     "using_sensor": "F",
-    "camera" : "0",
+    "camera" : "source2.mp4",
     "port" : "7004",
     "need_prompt" : "T"
   }

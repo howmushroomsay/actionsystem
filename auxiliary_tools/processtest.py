@@ -119,6 +119,7 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=Non
         if not ret:
             logging.error('camera error')
             stop_event.set()
+            break
         img = cv2.resize(img, (1920, 1080))
         img_RGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if imgqueue != None:
