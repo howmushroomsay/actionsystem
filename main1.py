@@ -5,6 +5,18 @@ from PyQt5.QtWidgets import QApplication
 from widgets import *
 from auxiliary_tools import DatabaseOperation
 import multiprocessing
+
+import logging
+from logging.handlers import RotatingFileHandler
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+handler = RotatingFileHandler('./data/log/app.log', maxBytes=1e6, backupCount=5)
+logging.getLogger('').setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                              datefmt='%a, %d %b %Y %H:%M:%S')
+handler.setFormatter(formatter)
+logging.getLogger().addHandler(handler)
+
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     app = QApplication(sys.argv)
