@@ -1,5 +1,5 @@
 import numpy as np
-import torch,math
+import torch,math,logging
 import torchvision.transforms as T
 from .repnet.model import RepNet
 
@@ -31,11 +31,8 @@ def count_fun(stop_event, frames_queue, count_queue):
             break
         frames.append(transform(frame))
         
-
-    print('counting...')
     best_stride, best_confidence, best_period_count,  = None, None, None
     for stride in strides:
-        print('stride: ', stride)
         num_batches = int(np.ceil(len(frames)/64/stride/batch_size))
         raw_period_length = None
         raw_periodicity_score = None
@@ -61,7 +58,6 @@ def count_fun(stop_event, frames_queue, count_queue):
         confidence, period_length, period_count, _ = model.get_counts(raw_period_length, raw_periodicity_score, stride)
         if best_confidence is None or confidence > best_confidence:
             best_confidence,  best_period_count = confidence, period_count
-    print(best_period_count.cpu()[-1])
-    print(len(frames))
     count_queue.put(math.ceil(best_period_count.cpu()[-1].item()))
+    logging.info('counting finished')
 

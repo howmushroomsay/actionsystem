@@ -5,12 +5,13 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main1.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[('data','data'),('../lib/mediapipe','mediapipe'),
     ('auxiliary_tools/action_model/configs','auxiliary_tools/action_model/configs'),
-    ('auxiliary_tools/action_model/model','auxiliary_tools/action_model/model')],
+    ('auxiliary_tools/action_model/model','auxiliary_tools/action_model/model'),
+    ('auxiliary_tools/count_main','auxiliary_tools/count_main'),],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

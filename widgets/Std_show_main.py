@@ -153,9 +153,10 @@ class Std_show(QWidget, Ui_Action_Eval):
 
         
     def upload(self):
-        self.close()        
         self.parent.upload()
         self.parent.back()
+        self.close()        
+        
 
 
 if __name__ == '__main__':

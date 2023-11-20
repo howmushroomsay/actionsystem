@@ -113,7 +113,10 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=Non
         stop_event.set()
         return
     while not stop_event.is_set():
-        skeleton = np.zeros((33,4))
+        if action_train:
+            skeleton = np.zeros((33,3))
+        else:
+            skeleton = np.zeros((33,4))
         skeleton_img = np.zeros((33,3))
         ret, img = cap.read()
         if not ret:
@@ -142,7 +145,8 @@ def skeleton_get(stop_event, timequeue, corqueue, imgqueue=None, count_queue=Non
                     skeleton[i][0] = results.pose_world_landmarks.landmark[i].x
                     skeleton[i][1] = results.pose_world_landmarks.landmark[i].y
                     skeleton[i][2] = results.pose_world_landmarks.landmark[i].z
-                    skeleton[i][3] = results.pose_world_landmarks.landmark[i].visibility
+                    if not action_train:
+                        skeleton[i][3] = results.pose_world_landmarks.landmark[i].visibility
             # 用于规范训练画图
             if not action_train:
                 if results.pose_world_landmarks:
@@ -262,9 +266,11 @@ def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
     skeleton_dict, index_dict = get_skdict(path='data/bvh/a.txt')
     xyz_dict = {'Y':0, 'Z':1, 'X':2}
     client = socket.socket()
-    port = int(load_json('./data/sensor/config.json')["port"])
+    conf = load_json('./data/sensor/config.json')
+    ip_ = conf["ip"]
+    port = int(conf["port"])
     try:
-        client.connect(("127.0.0.1", port))
+        client.connect((ip_, port))
     except:
         logging.error('sensor connect error')
         stop_event.set()
@@ -418,6 +424,6 @@ def actionRec(stop_event, skqueue, acqueue):
                 skeleton = torch.tensor(skeleton)
                 pro, action = Action.eval(skeleton)
                 acqueue.put((start, end, action, pro))
-            logging.info(start, end, action_class[action], pro)
+            logging.info((start, end, action_class[action], pro))
     logging.info("actionRec process end")
             

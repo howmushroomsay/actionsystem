@@ -81,8 +81,11 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         if not os.path.exists(self.course_path):
             with open(self.course_path, 'wb') as f:
                 f.write(response.content)
-        
-        skeleton_url = "http://" + self.video_ip + self.course_dir + self.skeleton_path.replace('\\','/')
+        if self.using_sensor:
+            path = self.skeleton_path.replace('\\','/').split('.')[0] + 's.npy'
+            skeleton_url = "http://" + self.video_ip + self.course_dir + path
+        else:
+            skeleton_url = "http://" + self.video_ip + self.course_dir + self.skeleton_path.replace('\\','/')
         
         npy_path = os.path.splitext(self.course_path)[0] + '.npy'
 
@@ -200,17 +203,17 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
                 self.process_id.append(Process(target=count_fun,
                                     args=(self.stop_event, 
                                             self.count_queue, 
-                                            self.count_re)))
+                                            self.count_re),name="count_fun"))
             self.process_id.append(Process(target=skeleton_get, 
                                       args=(self.stop_event,  
                                             self.timequeue, 
                                             self.corqueue,
                                             None, 
                                             self.count_queue, 
-                                            self.camera, False)))
+                                            self.camera, False),name="skeleton_get"))
 
         for i in self.process_id:
-            # i.daemon = True
+            i.daemon = True
             i.start()
 
     def start_judge(self):
@@ -228,8 +231,8 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
         else:
             score, grade, disp_T, disp_S, error_part = action_evaluation(T_skeleton, self.S_skeleton)
         count = -1
-        # np.save('./data/student.npy',self.S_skeleton)
-        if self.count_flag and not self.using_sensor:
+        np.save('./data/student.npy',self.S_skeleton)
+        if not self.using_sensor and self.count_flag:
             while(self.count_re.empty()):
                 continue
             count = self.count_re.get()
@@ -257,6 +260,8 @@ class Action_Eval_Main(QWidget,Ui_Action_FollowP1):
     def back(self):
         self.stop_event.set()
         self.player.stop()
+        # for i in self.process_id:
+        #     i.join()
         time.sleep(0.5)
         if self.parent != None:
             self.parent.show()

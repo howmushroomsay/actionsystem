@@ -1,6 +1,7 @@
 {
     "using_sensor": "F",
-    "camera" : "source2.mp4",
+    "camera" : "0",
     "port" : "7004",
-    "need_prompt" : "T"
+    "need_prompt" : "T",
+    "ip" : "127.0.0.1"
   }
