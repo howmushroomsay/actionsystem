@@ -1,216 +1,205 @@
-import os, struct
 import numpy as np
-from numpy import array, dot
-from math import radians, cos, sin
-
-class Node(object):
-    def __init__(self, root=False):
-        self.name = None
-        self.channels = []
-        self.offset = (0, 0, 0)
+import re
+class BvhNode:
+    def __init__(self, value=[], parent=None):
+        self.value = value
         self.children = []
-        self._is_root = root
+        self.parent = parent
+        if self.parent:
+            self.parent.add_child(self)
+    def add_child(self, item):
+        item.parent = self
+        self.children.append(item)
+
+    def filter(self, key):
+        for child in self.children:
+            if child.value[0] == key:
+                yield child
+
+    def __iter__(self):
+        for child in self.children:
+            yield child
+
+    def __getitem__(self, key):
+        for child in self.children:
+            for index, item in enumerate(child.value):
+                if item == key:
+                    if index + 1 >= len(child.value):
+                        return None
+                    else:
+                        return child.value[index + 1:]
+        raise IndexError('key {} not found'.format(key))
+
+    def __repr__(self):
+        return str(' '.join(self.value))
 
     @property
-    def is_root(self):
-        return self._is_root
+    def name(self):
+        return self.value[1]
 
-    @property
-    def is_end_site(self):
-        return len(self.children) == 0
-    
-class BvhReader(object):
-    def __init__(self, filename):
-        self.filename = filename
-        self._token_list = []
-        self._line_num = 0
-        self.root = None
-        self._node_stack = []
-        self.num_channels = 0
-    
-    def read(self):
-        with open(self.filename, 'r') as self._file_handle:
-            self.read_hierarchy()
-            self.on_hierarchy(self.root)
 
-    def on_hierarchy(self, root):
-        self.root = root  # Save root for later use
-        self.keyframes = []  # Used later in onFrame
+class Bvh:
 
-    def read_hierarchy(self):
-        tok = self.token()
-        if tok != "HIERARCHY":
-            raise SyntaxError("Syntax error in line %d: 'HIERARCHY' expected, "
-                              "got '%s' instead" % (self._line_num, tok))
-        tok = self.token()
-        if tok != "ROOT":
-            raise SyntaxError("Syntax error in line %d: 'ROOT' expected, "
-                              "got '%s' instead" % (self._line_num, tok))
+    def __init__(self, data):
+        self.data = data
+        self.root = BvhNode()
+        self.frames = []
+        self.tokenize()
 
-        self.root = Node(root=True)
-        self._node_stack.append(self.root)
-        self.read_node()
-
-    def read_node(self):
-        name = self.token()
-        self._node_stack[-1].name = name
-        tok = self.token()
-        if tok != "{":
-            raise SyntaxError("Syntax error in line %d: '{' expected, "
-                              "got '%s' instead" % (self._line_num, tok))
-        while 1:
-            tok = self.token()
-            if tok == "OFFSET":
-                x = self.float_token()
-                y = self.float_token()
-                z = self.float_token()
-                self._node_stack[-1].offset = (x, y, z)
-            elif tok == "CHANNELS":
-                n = self.int_token()
-                channels = []
-                for i in range(n):
-                    tok = self.token()
-                    if tok not in ["Xposition", "Yposition", "Zposition",
-                                   "Xrotation", "Yrotation", "Zrotation"]:
-                        raise SyntaxError("Syntax error in line %d: Invalid "
-                                          "channel name: '%s'"
-                                          % (self._line_num, tok))
-                    channels.append(tok)
-                self.num_channels += len(channels)
-                self._node_stack[-1].channels = channels
-            elif tok == "JOINT":
-                node = Node()
-                self._node_stack[-1].children.append(node)
-                self._node_stack.append(node)
-                self.read_node()
-            elif tok == "End":
-                node = Node()
-                self._node_stack[-1].children.append(node)
-                self._node_stack.append(node)
-                self.read_node()
-            elif tok == "}":
-                if self._node_stack[-1].is_end_site:
-                    self._node_stack[-1].name = "End Site"
-                self._node_stack.pop()
-                break
+    def tokenize(self):
+        first_round = []
+        accumulator = ''
+        for char in self.data:
+            if char not in ('\n', '\r'):
+                accumulator += char
+            elif accumulator:
+                    first_round.append(re.split('\\s+', accumulator.strip()))
+                    accumulator = ''
+        node_stack = [self.root]
+        frame_time_found = False
+        node = None
+        for item in first_round:
+            if frame_time_found:
+                self.frames.append(item)
+                continue
+            key = item[0]
+            if key == '{':
+                node_stack.append(node)
+            elif key == '}':
+                node_stack.pop()
             else:
-                raise SyntaxError("Syntax error in line %d: Unknown "
-                                  "keyword '%s'" % (self._line_num, tok))
+                node = BvhNode(item)
+                node_stack[-1].add_child(node)
+            if item[0] == 'Frame' and item[1] == 'Time:':
+                break
 
-    def int_token(self):
-        """Return the next token which must be an int. """
-        tok = self.token()
-        try:
-            return int(tok)
-        except ValueError:
-            raise SyntaxError("Syntax error in line %d: Integer expected, "
-                              "got '%s' instead" % (self._line_num, tok))
+    def search(self, *items):
+        found_nodes = []
 
-    def float_token(self):
-        tok = self.token()
-        try:
-            return float(tok)
-        except ValueError:
-            raise SyntaxError("Syntax error in line %d: Float expected, "
-                              "got '%s' instead" % (self._line_num, tok))
+        def check_children(node):
+            if len(node.value) >= len(items):
+                failed = False
+                for index, item in enumerate(items):
+                    if node.value[index] != item:
+                        failed = True
+                        break
+                if not failed:
+                    found_nodes.append(node)
+            for child in node:
+                check_children(child)
+        check_children(self.root)
+        return found_nodes
 
-    def token(self):
-        if self._token_list:
-            tok = self._token_list[0]
-            self._token_list = self._token_list[1:]
-            return tok
+    def get_joints(self):
+        joints = []
 
-        # Read a new line
-        s = self.read_line()
-        self.create_tokens(s)
-        return self.token()
+        def iterate_joints(joint):
+            joints.append(joint)
+            for child in joint.filter('JOINT'):
+                iterate_joints(child)
+        iterate_joints(next(self.root.filter('ROOT')))
+        return joints
 
-    def read_line(self):
-        self._token_list = []
-        while 1:
-            s = self._file_handle.readline()
-            self._line_num += 1
-            if s == "":
-                raise StopIteration
-            return s
+    def get_joints_names(self):
+        joints = []
 
-    def create_tokens(self, s):
-        s = s.strip()
-        a = s.split()
-        self._token_list = a
+        def iterate_joints(joint):
+            joints.append(joint.value[1])
+            for child in joint.filter('JOINT'):
+                iterate_joints(child)
+        iterate_joints(next(self.root.filter('ROOT')))
+        return joints
 
-class Joint:
+    def joint_direct_children(self, name):
+        joint = self.get_joint(name)
+        return [child for child in joint.filter('JOINT')]
 
-    def __init__(self, name):
-        self.name = name
-        self.children = []
-        # list entry is one of [XYZ]position, [XYZ]rotation
-        self.hasparent = 0  # flag
-        self.parent = 0  # joint.addchild() sets this
-        self.strans = array([0., 0., 0.])  # I think I could just use regular Python arrays.
-      
-        self.trtr = {}  # self.trtr[time]  A premultiplied series of translation and rotation matrices.
-        self.worldpos = {}  # Time-based worldspace xyz position of the joint's endpoint.  A list of vec4's
+    def get_joint_index(self, name):
+        return self.get_joints().index(self.get_joint(name))
 
-    def addchild(self, childjoint):
-        self.children.append(childjoint)
-        childjoint.hasparent = 1
-        childjoint.parent = self
+    def get_joint(self, name):
+        found = self.search('ROOT', name)
+        if not found:
+            found = self.search('JOINT', name)
+        if found:
+            return found[0]
+        raise LookupError('joint not found')
 
-class Skeleton:
+    def joint_offset(self, name):
+        joint = self.get_joint(name)
+        offset = joint['OFFSET']
+        return (float(offset[0]), float(offset[1]), float(offset[2]))
 
-    def __init__(self, hips, ignore_root_offset=True):
-        self.root = hips
+    def joint_channels(self, name):
+        joint = self.get_joint(name)
+        return joint['CHANNELS'][1:]
+
+    def get_joint_channels_index(self, joint_name):
+        index = 0
+        for joint in self.get_joints():
+            if joint.value[1] == joint_name:
+                return index
+            index += int(joint['CHANNELS'][0])
+        raise LookupError('joint not found')
+
+    def get_joint_channel_index(self, joint, channel):
+        channels = self.joint_channels(joint)
+        if channel in channels:
+            channel_index = channels.index(channel)
+        else:
+            channel_index = -1
+        return channel_index
+
+    def frame_joint_channel(self, frame_index, joint, channel, value=None):
+        joint_index = self.get_joint_channels_index(joint)
+        channel_index = self.get_joint_channel_index(joint, channel)
+        if channel_index == -1 and value is not None:
+            return value
+        return float(self.frames[frame_index][joint_index + channel_index])
+
+    def frame_joint_channels(self, frame_index, joint, channels, value=None):
+        values = []
+        joint_index = self.get_joint_channels_index(joint)
+        for channel in channels:
+            channel_index = self.get_joint_channel_index(joint, channel)
+            if channel_index == -1 and value is not None:
+                values.append(value)
+            else:
+                values.append(
+                    float(
+                        self.frames[frame_index][joint_index + channel_index]
+                    )
+                )
+        return values
+
+    def frames_joint_channels(self, joint, channels, value=None):
+        all_frames = []
+        joint_index = self.get_joint_channels_index(joint)
+        for frame in self.frames:
+            values = []
+            for channel in channels:
+                channel_index = self.get_joint_channel_index(joint, channel)
+                if channel_index == -1 and value is not None:
+                    values.append(value)
+                else:
+                    values.append(
+                        float(frame[joint_index + channel_index]))
+            all_frames.append(values)
+        return all_frames
+
+    def joint_parent(self, name):
+        joint = self.get_joint(name)
+        if joint.parent == self.root:
+            return None
+        return joint.parent
+
+    def joint_parent_index(self, name):
+        joint = self.get_joint(name)
+        if joint.parent == self.root:
+            return -1
+        return self.get_joints().index(joint.parent)
 
 
-        if ignore_root_offset:
-            self.root.strans[0] = 0.0
-            self.root.strans[1] = 0.0
-            self.root.strans[2] = 0.0
-            self.root.stransmat = array([[1., 0., 0., 0.], [0., 1., 0., 0.],
-                  [0., 0., 1., 0.], [0., 0., 0., 1.]])
-
-    @staticmethod
-    def joint_dfs(root):
-        nodes = []
-        stack = [root]
-        while stack:
-            cur_node = stack.pop(0)
-            nodes.append(cur_node)
-            for child in cur_node.children:
-                if 'End' in child.name:
-                    continue
-                stack.insert(0, child)
-        return nodes
-    
-    def get_frames_worldpos(self):
-        joints = self.joint_dfs(self.root)
-
-        frame_data = []
-        for j in joints:
-            frame_data.extend(j.worldpos[0][:3])
-
-        header = ["{}.{}".format(j.name, thing) for j in joints
-                  for thing in ("Y", "X", "Z")]
-        return header, frame_data
-       
-    # def change_offsetfromdata(self, displacement):
-    # 使用displacement更换节点中的offset值
-
-    #     skeleton_dict, index_dict = get_skdict()
-    #     stack = [self.root]
-    #     while(stack):
-    #         cur_node = stack[0]
-    #         stack.pop(0)
-    #         if('End' in cur_node.name):
-    #             continue
-    #         index = skeleton_dict[cur_node.name]      
-    #         cur_node.strans += array(displacement[index*3:index*3+3])
-    #         cur_node.stransmat[0,3] = cur_node.strans[0]
-    #         cur_node.stransmat[1,3] = cur_node.strans[1]
-    #         cur_node.stransmat[2,3] = cur_node.strans[2]
-    #         for child in cur_node.children:
-    #             stack.append(child)
 
 def get_skdict(path=None):
     #获取骨架序列号字典
@@ -223,122 +212,81 @@ def get_skdict(path=None):
             index_dict[i] = name
     return skeleton_dict, index_dict
 
-def process_bvhnode(node, parentname='hips'):
-    # node2joint
-    name = node.name
-    if (name == "End Site") or (name == "end site"):
-        name = parentname + "End"
-    
-    b1 = Joint(name)
-    b1.strans[0] = node.offset[0]
-    b1.strans[1] = node.offset[1]
-    b1.strans[2] = node.offset[2]
-    b1.stransmat = array([[1., 0., 0., 0.], 
-                          [0., 1., 0., 0.],
-                          [0., 0., 1., 0.], 
-                          [0., 0., 0., 1.]])
-    b1.stransmat[0, 3] = b1.strans[0]
-    b1.stransmat[1, 3] = b1.strans[1]
-    b1.stransmat[2, 3] = b1.strans[2]
+def ProcessBVH(filename):
+    with open(filename) as f:
+        mocap = Bvh(f.read())
+    joints = mocap.get_joints_names()
+    joints_offsets = {}
+    joints_hierarchy = {}
+    joints_saved_channels = {}
+    for joint in joints:
+        joints_offsets[joint] = np.array(mocap.joint_offset(joint))
+        joints_saved_channels[joint] = mocap.joint_channels(joint)
+        joint_hierarchy = []
+        parent_joint = joint
+        while True:
+            parent_name = mocap.joint_parent(parent_joint)
+            if parent_name == None:break
 
-    for child in node.children:
-        b2 = process_bvhnode(child, name)
-        b1.addchild(b2)
-    return b1
+            joint_hierarchy.append(parent_name.name)
+            parent_joint = parent_name.name
+
+        joints_hierarchy[joint] = joint_hierarchy
+    return joints, joints_offsets, joints_hierarchy
+
+def Rx(ang):
+    ang = np.radians(ang)
+    Rot_Mat = np.array([
+        [1, 0, 0],
+        [0, np.cos(ang), -1*np.sin(ang)],
+        [0, np.sin(ang),    np.cos(ang)]])
+    return Rot_Mat
+
+def Ry(ang):
+    ang = np.radians(ang)
+    Rot_Mat = np.array([
+        [np.cos(ang), 0, np.sin(ang)],
+        [0, 1, 0],
+        [-1*np.sin(ang), 0, np.cos(ang)]])
+    return Rot_Mat
+
+def Rz(ang):
+    ang = np.radians(ang)
+    Rot_Mat = np.array([
+        [np.cos(ang), -1*np.sin(ang), 0],
+        [np.sin(ang), np.cos(ang), 0],
+        [0, 0, 1]])
+    return Rot_Mat
+
+#the rotation matrices need to be chained according to the order in the file
+def _get_rotation_chain(joint_rotations):
+    Rot_Mat =  np.array([[1,0,0],[0,1,0],[0,0,1]])#identity matrix 3x3
+    Rot_Mat = Rot_Mat @ Ry(joint_rotations[0])
+    Rot_Mat = Rot_Mat @ Rx(joint_rotations[1])
+    Rot_Mat = Rot_Mat @ Rz(joint_rotations[2])
+    return Rot_Mat
 
 
-def process_bvhkeyframe(keyframe, joint, t):
-    if 'End' in joint.name:
-        return
-    
-    drotmat = array([[1., 0., 0., 0.], [0., 1., 0., 0.],
-                     [0., 0., 1., 0.], [0., 0., 0., 1.]])
-    skeleton_dict, index_dict = get_skdict(path='data/bvh/a.txt')
-    index = skeleton_dict[joint.name]
+def cal_pos(joints, joints_offsets, joints_hierarchy, rotations):
+    skeleton = np.zeros((59,3))
+    skeleton[0] = [0.000000, 97.119995, 0.000000]
+    skeleton_dict, index_dict = get_skdict('./data/bvh/a.txt')
+    for joint in joints:
+        if joint == joints[0]:
+            continue
+        connected_joints = joints_hierarchy[joint][:][::-1]
+        connected_joints.append(joint) #this contains the chain of joints that finally end with the current joint that we want the coordinate of.
+        Rot = np.eye(3)
+        pos = [0,0,0]
+        for i, con_joint in enumerate(connected_joints):
+            if i == 0:
+                pass
+            else:
+                parent_joint = connected_joints[i - 1]
+                Rot = Rot @ _get_rotation_chain(rotations[skeleton_dict[parent_joint]*3:skeleton_dict[parent_joint]*3+3])
+            joint_pos = joints_offsets[con_joint]
+            joint_pos = Rot @ joint_pos
+            pos = pos + joint_pos
 
-    yrot = keyframe[index*3]
-    xrot = keyframe[index*3+1]
-    zrot = keyframe[index*3+2]
-
-    # Xrotation
-    theta = radians(xrot)
-    mycos = cos(theta)
-    mysin = sin(theta)
-    drotmat2 = array([[1.,    0.,     0., 0.], 
-                      [0., mycos, -mysin, 0.],
-                      [0., mysin,  mycos, 0.], 
-                      [0.,    0.,     0., 1.]])
-    drotmat = dot(drotmat, drotmat2)
-
-    # Yrotation
-    theta = radians(yrot)
-    mycos = cos(theta)
-    mysin = sin(theta)
-    drotmat2 = array([[mycos,  0., mysin, 0.], 
-                      [0.,     1.,    0., 0.], 
-                      [-mysin, 0., mycos, 0.], 
-                      [0.,     0.,    0., 1.]])
-    drotmat = dot(drotmat, drotmat2)
-
-    # Zrotation
-    theta = radians(zrot)
-    mycos = cos(theta)
-    mysin = sin(theta)
-    drotmat2 = array([[mycos, -mysin, 0., 0.], 
-                      [mysin, mycos,  0., 0.], 
-                      [0.,       0.,  1., 0.], 
-                      [0.,       0.,  0., 1.]])
-    drotmat = dot(drotmat, drotmat2)
-
-   
-    if joint.hasparent:  # Not hips
-        parent_trtr = joint.parent.trtr[t]  # Dictionary-based rewrite
-        localtoworld = dot(parent_trtr, joint.stransmat)
-    else:  # Hips
-        localtoworld = joint.stransmat
-
-    joint.trtr[t] = dot(localtoworld, drotmat)
-
-    worldpos = array([localtoworld[0, 3], localtoworld[1, 3],
-                      localtoworld[2, 3], localtoworld[3, 3]])
-    joint.worldpos[t] = worldpos  # Dictionary-based approach
-
-    for child in joint.children:
-        process_bvhkeyframe(keyframe, child, t)
-
-def read_data(path=r'C:\Users\user\Desktop\https\data_time\exp3\1200.npy'):
-    data = bytes(np.load(path))[1:]
-    skeleton_data = data[64:]
-    displacement = []
-    rotation = []   
-    for i in range(59):
-        each_skeleton =  skeleton_data[i*24:(i+1)*24]
-        temp_data = []
-        for j in range(6):
-            temp_data.append(struct.unpack('<f', each_skeleton[j*4:(j+1)*4]))
-        displacement+= [temp_data[0][0],temp_data[1][0],temp_data[2][0]]
-        rotation+=[temp_data[3][0],temp_data[4][0],temp_data[5][0]]
-    return displacement, rotation
-
-def process_bvhfile(filename):
-    my_bvh = BvhReader(filename)
-    my_bvh.read()
-    hips = process_bvhnode(my_bvh.root)
-    # path = os.path.join(r'C:\Users\user\Desktop\https\data_time\exp3','{}.npy'.format(10+2))
-    # displacement, rotation = read_data() 
-    myskeleton = Skeleton(hips)
-    return myskeleton
-    # process_bvhkeyframe(rotation, myskeleton.root, 0)
-    # header, frames = myskeleton.get_frames_worldpos()
-    # skeleton_dict, index_dict = get_skdict()
-    # xyz_dict = {'X':0, 'Y':1, 'Z':2}
-    # skeleton = np.zeros((59,3))
-    # for j in range(1, len(frames)):
-    #     name = header[j].split('.')
-    #     k = skeleton_dict[name[0]]
-    #     m = xyz_dict[name[1]]
-    #     skeleton[k][m] = frames[j] 
-
-    # return skeleton
-if __name__ == '__main__':
-    a = process_bvhfile('./真实.bvh')
+        skeleton[skeleton_dict[joint]] = pos
+    return skeleton

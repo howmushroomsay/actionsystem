@@ -6,7 +6,7 @@ import mediapipe as mp
 import numpy as np
 import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
-from .bvh_process import process_bvhfile, process_bvhkeyframe, get_skdict
+from .bvh_process import cal_pos, ProcessBVH, get_skdict
 from .action_model.action_rec import get_parameters
 from .action_model.src.processor import Processor
 
@@ -262,42 +262,33 @@ def draw_skeleton3d(stop_event, draw_queue):
     plt.close("all")
 
 def parse_data(stop_event, timequeue, corqueue, draw_queue=None):
-    myskeleton = process_bvhfile('data/bvh/test.bvh')
-    skeleton_dict, index_dict = get_skdict(path='data/bvh/a.txt')
-    xyz_dict = {'Y':0, 'Z':1, 'X':2}
-    client = socket.socket()
-    conf = load_json('./data/sensor/config.json')
-    ip_ = conf["ip"]
-    port = int(conf["port"])
+    filename = "./data/bvh/test.bvh"
+    joints, joints_offsets, joints_hierarchy = ProcessBVH(filename)
+    temp = load_json("./data/sensor/config.json")
+    ip_ = temp["ip"]
+    port = int(temp['port'])
     try:
+        client = socket.socket()
         client.connect((ip_, port))
     except:
         logging.error('sensor connect error')
         stop_event.set()
         return
-    flag = 0
-    last_data = ''
-    logging.info('parse_data process start')
+    last_data = ""
+    logging.info("parse_data processs start")
     while not stop_event.is_set():
         data = client.recv(3000)
-        displacemenet, rotation, last_data = read_data(last_data, data)
+        rotation, last_data = read_data(last_data, data)
+
         skeleton = np.zeros((59,3))
         if timequeue.qsize() > 0:
             t, flag = timequeue.get()
-            process_bvhkeyframe(rotation, myskeleton.root, 0)
-            header, frames = myskeleton.get_frames_worldpos()
-            for j in range(1, len(frames)):
-                name = header[j].split('.')
-                k = skeleton_dict[name[0]]
-                m = xyz_dict[name[1]]
-                skeleton[k][m] = frames[j]
+            skeleton = cal_pos(joints, joints_offsets, joints_hierarchy, rotation)
             skeleton_ = skeleton_tran(skeleton) / 10
-            # skeleton_[:,1] = -skeleton_[:,1]
             temp = skeleton_[:,1].copy()
             skeleton_[:,0] = skeleton_[:,0]
-            skeleton_[:,1] = -skeleton_[:,2]
-            skeleton_[:,2] = -temp
-            # skeleton_[:,2] = -skeleton_[:,2]
+            skeleton_[:,1] = -skeleton_[:,1]
+            skeleton_[:,2] = -skeleton_[:,-1]
             corqueue.put((t, skeleton_, flag))
             if draw_queue != None:
                 draw_queue.put((flag, skeleton_))
